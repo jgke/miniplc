@@ -26,6 +26,11 @@ public class Token {
         this.content = content;
     }
 
+    public Token(TokenValue value) {
+        this.value = value;
+        this.content = null;
+    }
+
     public TokenValue getValue() {
         return value;
     }
@@ -35,10 +40,18 @@ public class Token {
     }
 
     public VariableType getVariableType() {
-        return (VariableType)content;
+        return (VariableType) content;
     }
 
     public String getString() {
-        return (String)content;
+        return (String) content;
+    }
+
+    @Override
+    public String toString() {
+        if (content != null) {
+            return "[" + value + "=" + content + "]";
+        }
+        return "[" + value + "]";
     }
 }

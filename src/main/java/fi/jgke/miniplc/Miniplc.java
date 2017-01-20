@@ -15,8 +15,180 @@
  */
 package fi.jgke.miniplc;
 
+import fi.jgke.miniplc.interpreter.TokenQueue;
+
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+
 public class Miniplc {
-    public static void main(String[] args) {
-        System.out.println("Hello world");
+
+    private static final Map<Character, Character> escapeMap;
+    private static final Map<String, TokenValue> keywords;
+    static
+    {
+        escapeMap = new HashMap<>();
+        escapeMap.put('n', '\n');
+        escapeMap.put('"', '"');
+        escapeMap.put('t', '\t');
+
+        keywords = new HashMap<>();
+        keywords.put("var", TokenValue.VAR);
+        keywords.put("for", TokenValue.FOR);
+        keywords.put("end", TokenValue.END);
+        keywords.put("in", TokenValue.IN);
+        keywords.put("do", TokenValue.DO);
+        keywords.put("read", TokenValue.READ);
+        keywords.put("print", TokenValue.PRINT);
+        keywords.put("int", TokenValue.INT);
+        keywords.put("string", TokenValue.STRING);
+        keywords.put("bool", TokenValue.BOOL);
+        keywords.put("assert", TokenValue.ASSERT);
+    }
+
+    private static boolean isNumber(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private static boolean isLetter(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    private static boolean isIdentifierCharacter(char c) {
+        return isNumber(c) || isLetter(c);
+    }
+
+    private static Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
+        char beginning = input.remove();
+        while(Character.isWhitespace(beginning)) {
+            if(input.isEmpty())
+                return new Token(TokenValue.EOS);
+            beginning = input.remove();
+        }
+        switch (beginning) {
+            /* Simple syntax */
+            case ';':
+                return new Token(TokenValue.SEMICOLON);
+            case '(':
+                return new Token(TokenValue.OPEN_BRACE);
+            case ')':
+                return new Token(TokenValue.CLOSE_BRACE);
+
+            /* Operators, simple cases */
+            case '+':
+                return new Token(TokenValue.PLUS);
+            case '-':
+                return new Token(TokenValue.MINUS);
+            case '*':
+                return new Token(TokenValue.TIMES);
+            case '&':
+                return new Token(TokenValue.AND);
+            case '!':
+                return new Token(TokenValue.NOT);
+            case '<':
+                return new Token(TokenValue.LESSTHAN);
+            case '=':
+                return new Token(TokenValue.EQUALS);
+
+            /* Comment or times */
+            case '/':
+                if (input.peek() == '/') {
+                    /* It's a comment, remove the rest of the line */
+                    while (input.remove() != '\n') ;
+                    return readToken(input);
+                } else if (input.peek() == '*') {
+                    /* Multiline comment, remove until end of the multiline comment */
+                    while (input.remove() != '*' && input.peek() != '/') ;
+                    return readToken(input);
+                }
+                return new Token(TokenValue.TIMES);
+
+            /* Assignment or type definition */
+            case ':':
+                if (input.peek() == '=') {
+                    input.remove();
+                    return new Token(TokenValue.ASSIGN);
+                }
+                return new Token(TokenValue.COLON);
+
+            case '.':
+                char c = input.remove();
+                if (c != '.') {
+                    throw new UnexpectedCharacterException(c);
+                }
+                return new Token(TokenValue.RANGE);
+        }
+
+        String token = "";
+
+        if(beginning == '"') {
+            while(true) {
+                char c = input.remove();
+                if (c == '"')
+                    return new Token(TokenValue.STRINGVAR, token);
+                if (c == '\\') {
+                    char cc = input.remove();
+                    c = escapeMap.getOrDefault(cc, cc);
+                }
+                token += c;
+            }
+        }
+
+        token += beginning;
+
+        if (!isLetter(beginning) && !isNumber(beginning)) {
+            throw new UnexpectedCharacterException(beginning);
+        }
+
+        if (beginning >= '0' && beginning <= '9') {
+            while (true) {
+                char c = input.peek();
+                if (isNumber(c))
+                    token += c;
+                else if (isLetter(c))
+                    throw new UnexpectedCharacterException(c);
+                else
+                    return new Token(TokenValue.INTVAR, token);
+                input.remove();
+            }
+        }
+
+        while (true) {
+            char c = input.peek();
+            if (isIdentifierCharacter(c))
+                token += c;
+            else {
+                TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
+                return new Token(type, token);
+            }
+            input.remove();
+        }
+    }
+
+    private static TokenQueue tokenize(String input) throws UnexpectedCharacterException {
+        TokenQueue tokenQueue = new TokenQueue();
+        Queue<Character> queue = new ArrayDeque<>();
+        for(Character c : input.toCharArray())
+            queue.add(c);
+        while (!queue.isEmpty())
+            tokenQueue.add(readToken(queue));
+        return tokenQueue;
+    }
+
+    public static void main(String[] args) throws UnexpectedCharacterException {
+        String s = "var nTimes : int := 0;\n" +
+                "print \"How many times?\"; \n" +
+                "read nTimes; \n" +
+                "var x : int;\n" +
+                "for x in 0..nTimes-1 do \n" +
+                "    print x;\n" +
+                "    print \" : Hello, World!\\n\";\n" +
+                "end for;\n" +
+                "assert (x = nTimes);\n";
+        System.out.println("s");
+        for(Token t : tokenize(s)) {
+            System.out.println(t);
+        }
     }
 }
