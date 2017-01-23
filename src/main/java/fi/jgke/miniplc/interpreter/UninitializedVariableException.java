@@ -15,16 +15,8 @@
  */
 package fi.jgke.miniplc.interpreter;
 
-import fi.jgke.miniplc.TokenValue;
-
-import java.util.Arrays;
-
-public class UnexpectedTypeException extends RuntimeException {
-    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
-        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
-    }
-
-    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
-        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
+public class UninitializedVariableException extends RuntimeException {
+    public UninitializedVariableException(Variable variable) {
+        super("Uninitialized variable: " + variable.getName());
     }
 }

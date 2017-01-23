@@ -49,9 +49,10 @@ public class Token {
 
     @Override
     public String toString() {
+        String newline = this.value.equals(TokenValue.SEMICOLON) || this.value.equals(TokenValue.DO) ? "\n" : " ";
         if (content != null) {
-            return "[" + value + "=" + content + "]";
+            return "[" + value + "=" + content + "]" + newline;
         }
-        return "[" + value + "]";
+        return "[" + value + "]" + newline;
     }
 }

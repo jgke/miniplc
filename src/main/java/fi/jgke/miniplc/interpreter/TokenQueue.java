@@ -18,14 +18,54 @@ package fi.jgke.miniplc.interpreter;
 import fi.jgke.miniplc.Token;
 import fi.jgke.miniplc.TokenValue;
 
-import java.util.ArrayDeque;
+import java.util.*;
+import java.util.function.Consumer;
 
-public class TokenQueue extends ArrayDeque<Token> {
-    public Token getExpectedToken(TokenValue type) throws UnexpectedTypeException {
+public class TokenQueue implements Iterable<Token> {
+    ArrayDeque<Token> tokens;
+
+    public TokenQueue() {
+        tokens = new ArrayDeque<>();
+    }
+
+    public void add(Token token) {
+        tokens.add(token);
+    }
+
+    public Token getExpectedToken(TokenValue... types) throws UnexpectedTypeException {
         Token token = this.remove();
-        if (token.getValue() != type) {
-            throw new UnexpectedTypeException(token.getValue(), type);
+        for (TokenValue type : types) {
+            if (token.getValue().equals(type))
+                return token;
         }
-        return token;
+        throw new UnexpectedTypeException(token.getValue(), types);
+    }
+
+
+    public Token remove() {
+        return tokens.remove();
+    }
+
+    public Token peek() {
+        return tokens.peek();
+    }
+
+    @Override
+    public Iterator<Token> iterator() {
+        return tokens.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super Token> consumer) {
+        tokens.forEach(consumer);
+    }
+
+    @Override
+    public Spliterator<Token> spliterator() {
+        return tokens.spliterator();
+    }
+
+    public boolean isEmpty() {
+        return tokens.isEmpty();
     }
 }

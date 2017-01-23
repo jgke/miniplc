@@ -15,19 +15,38 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.Executable;
+import fi.jgke.miniplc.TokenValue;
 import fi.jgke.miniplc.interpreter.RuntimeException;
 import fi.jgke.miniplc.interpreter.Stack;
 import fi.jgke.miniplc.interpreter.TokenQueue;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Statements implements Executable {
     private List<Statement> statements;
 
+    public Statements() {
+        statements = new ArrayList<>();
+    }
+
+    // <stmts>  ::=  <stmt> ";" ( <stmt> ";" )*
     @Override
-    public void execute(TokenQueue tokens, Stack stack) throws RuntimeException {
-        for(Statement statement : statements)
-            statement.execute(tokens, stack);
+    public void parse(TokenQueue tokens) throws RuntimeException {
+        /* Peek out END so that parsing stops at block scope */
+        while(!tokens.isEmpty() && !tokens.peek().getValue().equals(TokenValue.END)) {
+            Statement statement = new Statement();
+            statement.parse(tokens);
+            statements.add(statement);
+
+            tokens.getExpectedToken(TokenValue.SEMICOLON);
+        }
+    }
+
+    @Override
+    public void execute(Stack stack) throws RuntimeException {
+        for (Statement statement : statements)
+            statement.execute(stack);
     }
 }

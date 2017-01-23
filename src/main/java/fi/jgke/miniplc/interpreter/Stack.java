@@ -15,20 +15,53 @@
  */
 package fi.jgke.miniplc.interpreter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Stack {
-    Map<String, Variable> variables;
+    ArrayList<Map<String, Variable>> variables;
 
     public Stack() {
-        this.variables = new HashMap<>();
+        this.variables = new ArrayList<>();
+        this.variables.add(new HashMap<>());
     }
 
-    public void addVariable(String name, Variable variable) throws VariableAlreadyDefinedException {
-        if(variables.containsKey(name)) {
-            throw new VariableAlreadyDefinedException(name);
+    public void addVariable(Variable variable) throws VariableAlreadyDefinedException {
+        if (variables.get(variables.size() - 1).containsKey(variable.getName())) {
+            throw new VariableAlreadyDefinedException(variable.getName());
         }
-        variables.put(name, variable);
+        variables.get(variables.size() - 1).put(variable.getName(), variable);
+    }
+
+    public void updateVariable(Variable variable) throws UndefinedVariableException {
+        String name = variable.getName();
+        Map<String, Variable> map;
+        for (int i = variables.size() - 1; i >= 0; i--) {
+            map = variables.get(i);
+            if (map.containsKey(name)) {
+                map.put(name, variable);
+                return;
+            }
+        }
+        throw new UndefinedVariableException(name);
+    }
+
+    public Variable getVariable(String name) throws UndefinedVariableException {
+        Map<String, Variable> map;
+        for (int i = variables.size() - 1; i >= 0; i--) {
+            map = variables.get(i);
+            if (map.containsKey(name))
+                return map.get(name);
+        }
+        throw new UndefinedVariableException(name);
+    }
+
+    public void pushFrame() {
+        variables.add(new HashMap<>());
+    }
+
+    public void popFrame() {
+        variables.remove(variables.size() - 1);
     }
 }

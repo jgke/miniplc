@@ -1,12 +1,3 @@
-package fi.jgke.miniplc;
-
-import fi.jgke.miniplc.interpreter.RuntimeException;
-import fi.jgke.miniplc.interpreter.Stack;
-import fi.jgke.miniplc.interpreter.TokenQueue;
-import fi.jgke.miniplc.language.Statements;
-
-import java.util.ArrayList;
-
 /*
  * Copyright 2016 Jaakko Hannikainen
  *
@@ -22,16 +13,16 @@ import java.util.ArrayList;
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-public class Program implements Executable {
-    
-    private Statements statements;
+package fi.jgke.miniplc.language;
 
-    public Program(Statements statements) {
-        this.statements = statements;
-    }
+import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.interpreter.Stack;
+import fi.jgke.miniplc.interpreter.TokenQueue;
+import fi.jgke.miniplc.interpreter.Variable;
 
-    @Override
-    public void execute(TokenQueue tokens, Stack stack) throws RuntimeException {
-        statements.execute(tokens, stack);
-    }
+import java.util.Optional;
+
+public interface Executable {
+    void parse(TokenQueue tokens) throws RuntimeException;
+    void execute(Stack stack) throws RuntimeException;
 }

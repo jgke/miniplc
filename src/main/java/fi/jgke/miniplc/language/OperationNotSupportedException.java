@@ -13,18 +13,19 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.language;
 
+import fi.jgke.miniplc.Token;
 import fi.jgke.miniplc.TokenValue;
+import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.interpreter.VariableType;
 
-import java.util.Arrays;
-
-public class UnexpectedTypeException extends RuntimeException {
-    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
-        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
+public class OperationNotSupportedException extends RuntimeException {
+    public OperationNotSupportedException(VariableType type, Token operator) {
+        super("Unsupported operation: Cannot use " + operator + " with " + type);
     }
 
-    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
-        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
+    public OperationNotSupportedException(TokenValue not) {
+        super("Cannot use " + not + " with two parameters");
     }
 }

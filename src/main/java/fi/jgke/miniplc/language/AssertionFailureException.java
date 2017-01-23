@@ -13,12 +13,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc;
+package fi.jgke.miniplc.language;
 
 import fi.jgke.miniplc.interpreter.RuntimeException;
-import fi.jgke.miniplc.interpreter.Stack;
-import fi.jgke.miniplc.interpreter.TokenQueue;
 
-public interface Executable {
-    void execute(TokenQueue tokens, Stack stack) throws RuntimeException;
+public class AssertionFailureException extends RuntimeException {
+    public AssertionFailureException() {
+        super("Assertion failed");
+    }
 }

@@ -13,18 +13,30 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.TokenValue;
+import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.interpreter.Stack;
+import fi.jgke.miniplc.interpreter.TokenQueue;
 
-import java.util.Arrays;
+import java.util.Optional;
 
-public class UnexpectedTypeException extends RuntimeException {
-    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
-        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
+public class Program implements Executable {
+
+    private Statements statements;
+
+    public Program() {
+        statements = new Statements();
     }
 
-    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
-        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
+    // <prog>   ::=  <stmts>
+    @Override
+    public void parse(TokenQueue tokens) throws RuntimeException {
+        statements.parse(tokens);
+    }
+
+    @Override
+    public void execute(Stack stack) throws RuntimeException {
+        statements.execute(stack);
     }
 }

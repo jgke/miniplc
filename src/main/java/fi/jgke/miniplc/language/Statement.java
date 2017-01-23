@@ -15,50 +15,255 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.Executable;
 import fi.jgke.miniplc.Token;
 import fi.jgke.miniplc.TokenValue;
 import fi.jgke.miniplc.interpreter.*;
 import fi.jgke.miniplc.interpreter.RuntimeException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class Statement implements Executable {
 
-    public void addVariable(TokenQueue tokens, Stack stack) throws RuntimeException {
-        Token identifier = tokens.getExpectedToken(TokenValue.IDENTIFIER);
-        tokens.getExpectedToken(TokenValue.COLON);
-        Token type = tokens.getExpectedToken(TokenValue.TYPE);
-        Variable variable = null;
-        if(tokens.peek().getValue() == TokenValue.ASSIGN) {
-            tokens.getExpectedToken(TokenValue.ASSIGN);
-            Token value;
-            switch(type.getVariableType()) {
-                case INT:
-                    value = tokens.getExpectedToken(TokenValue.INTVAR);
-                    variable = new Variable(VariableType.INT, Integer.parseInt(value.getString()));
-                    break;
-                case STRING:
-                    value = tokens.getExpectedToken(TokenValue.STRINGVAR);
-                    variable = new Variable(VariableType.STRING, value.getString());
-                    break;
-                case BOOL:
-                    value = tokens.getExpectedToken(TokenValue.BOOLVAR);
-                    variable = new Variable(VariableType.BOOL, Boolean.parseBoolean(value.getString()));
-                    break;
-                default:
-                    throw new NotImplementedException();
+    private class CreateVariable implements Executable {
+
+        private class UninitializedVariable implements ExecutableWithResult {
+            VariableType type;
+            public UninitializedVariable(VariableType type) {
+                this.type = type;
+            }
+            @Override
+            public void parse(TokenQueue tokens) throws RuntimeException {
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public Variable execute(Stack stack) throws RuntimeException {
+                return new Variable(type, null);
             }
         }
-        stack.addVariable(identifier.getString(), variable);
+
+        String variableName;
+        VariableType type;
+        Optional<ExecutableWithResult> value;
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            Token identifier = tokens.getExpectedToken(TokenValue.IDENTIFIER);
+            tokens.getExpectedToken(TokenValue.COLON);
+            Token typeToken = tokens.getExpectedToken(TokenValue.INT, TokenValue.STRING, TokenValue.BOOL);
+
+            variableName = identifier.getString();
+            type = typeToken.getVariableType();
+
+            if (tokens.peek().getValue() == TokenValue.ASSIGN) {
+                tokens.getExpectedToken(TokenValue.ASSIGN);
+                Expression expression = new Expression();
+                expression.parse(tokens);
+                value = Optional.of(expression);
+            } else {
+                value = Optional.empty();
+            }
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            ExecutableWithResult value = this.value.orElse(new UninitializedVariable(type));
+            Variable variable = new Variable(variableName, type, value.execute(stack).getNullableValue());
+            stack.addVariable(variable);
+        }
+    }
+
+    private class Assign implements Executable {
+        String identifier;
+        Expression value;
+
+        public Assign(Token identifier) {
+            this.identifier = identifier.getString();
+        }
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            tokens.getExpectedToken(TokenValue.ASSIGN);
+
+            value = new Expression();
+            value.parse(tokens);
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            VariableType type = stack.getVariable(identifier).getType();
+            Variable variable = value.execute(stack);
+            variable.setName(identifier);
+
+            if (!variable.getType().equals(type)) {
+                throw new TypeException(type, variable.getType());
+            }
+
+            stack.updateVariable(variable);
+        }
+    }
+
+    private class For implements Executable {
+
+        Expression loopStart;
+        Expression loopEnd;
+        String loopVariableName;
+        Statements loopBody;
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            loopVariableName = tokens.getExpectedToken(TokenValue.IDENTIFIER).getString();
+            tokens.getExpectedToken(TokenValue.IN);
+
+            loopStart = new Expression();
+            loopStart.parse(tokens);
+
+            tokens.getExpectedToken(TokenValue.RANGE);
+
+            loopEnd = new Expression();
+            loopEnd.parse(tokens);
+
+            tokens.getExpectedToken(TokenValue.DO);
+            loopBody = new Statements();
+            loopBody.parse(tokens);
+
+            tokens.getExpectedToken(TokenValue.END);
+            tokens.getExpectedToken(TokenValue.FOR);
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            Integer low = (Integer) loopStart.execute(stack).getValue();
+            Integer high = (Integer) loopEnd.execute(stack).getValue();
+
+            Variable loopVariable = new Variable(loopVariableName, VariableType.INT, low);
+            stack.updateVariable(loopVariable);
+
+            for (Integer i = low; i <= high; i++) {
+                stack.pushFrame();
+
+                loopBody.execute(stack);
+
+                stack.popFrame();
+                loopVariable = new Variable(loopVariableName, VariableType.INT, i+1);
+                stack.updateVariable(loopVariable);
+            }
+        }
+    }
+
+    private class Read implements Executable {
+        String identifier;
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            identifier = tokens.getExpectedToken(TokenValue.IDENTIFIER).getString();
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            String input = InputOutput.readLine();
+            Variable variable;
+
+            /* Why, MiniPL language ;__;
+             * print :: () -> Int
+             * print :: () -> String
+             */
+            try {
+                Integer value = Integer.parseInt(input);
+                variable = new Variable(identifier, VariableType.INT, value);
+            } catch (NumberFormatException ignored) {
+                variable = new Variable(identifier, VariableType.STRING, input);
+            }
+
+            stack.updateVariable(variable);
+        }
+    }
+
+    private class Print implements Executable {
+        Expression value;
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            value = new Expression();
+            value.parse(tokens);
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            Object value = this.value.execute(stack).getValue();
+            InputOutput.print(value);
+        }
+    }
+
+    private class Assert implements Executable {
+        Expression value;
+
+        @Override
+        public void parse(TokenQueue tokens) throws RuntimeException {
+            value = new Expression();
+            value.parse(tokens);
+        }
+
+        @Override
+        public void execute(Stack stack) throws RuntimeException {
+            Boolean value = (Boolean) this.value.execute(stack).getValue();
+            if (!value) {
+                throw new AssertionFailureException();
+            }
+        }
+    }
+
+    List<Executable> contents;
+
+    public Statement() {
+        contents = new ArrayList<>();
+    }
+
+    /*
+    <stmt>   ::=  "var" <var_ident> ":" <type> [ ":=" <expr> ]
+              |   <var_ident> ":=" <expr>
+              |   "for" <var_ident> "in" <expr> ".." <expr> "do"
+                     <stmts> "end" "for"
+              |   "read" <var_ident>
+              |   "print" <expr>
+              |   "assert" "(" <expr> ")"
+    */
+    @Override
+    public void parse(TokenQueue tokens) throws RuntimeException {
+        Token token = tokens.remove();
+        Executable content;
+        switch (token.getValue()) {
+            case VAR:
+                content = new CreateVariable();
+                break;
+            case IDENTIFIER:
+                content = new Assign(token);
+                break;
+            case FOR:
+                content = new For();
+                break;
+            case READ:
+                content = new Read();
+                break;
+            case PRINT:
+                content = new Print();
+                break;
+            case ASSERT:
+                content = new Assert();
+                break;
+            default:
+                throw new UnexpectedTokenException(token);
+        }
+        content.parse(tokens);
+        this.contents.add(content);
     }
 
     @Override
-    public void execute(TokenQueue tokens, Stack stack) throws RuntimeException {
-        Token token = tokens.remove();
-        switch(token.getValue()) {
-            case VAR:
-                addVariable(tokens, stack);
-                break;
+    public void execute(Stack stack) throws RuntimeException {
+        for (Executable executable : this.contents) {
+            executable.execute(stack);
         }
     }
 }

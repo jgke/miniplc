@@ -20,5 +20,18 @@ public enum TokenValue {
     IDENTIFIER,
 
     /* End of stream */
-    EOS
+    EOS;
+
+
+
+    public boolean isOperator() {
+        TokenValue[] values = {TokenValue.PLUS, TokenValue.MINUS, TokenValue.TIMES, TokenValue.DIVIDE,
+                TokenValue.LESSTHAN, TokenValue.EQUALS, TokenValue.AND};
+        for(TokenValue value : values) {
+            if(this.equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

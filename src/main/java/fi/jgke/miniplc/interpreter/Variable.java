@@ -16,11 +16,53 @@
 package fi.jgke.miniplc.interpreter;
 
 public class Variable {
+    private String name;
     private final VariableType type;
-    private Object value;
+    private final Object value;
 
     public Variable(VariableType type, Object value) {
         this.type = type;
         this.value = value;
+        this.name = null;
+        if (!(value == null || value instanceof Integer || value instanceof String || value instanceof Boolean))
+            throw new IllegalStateException();
+
+    }
+
+    public Variable(String name, VariableType type, Object value) {
+        this.name = name;
+        this.type = type;
+        this.value = value;
+        if (!(value == null || value instanceof Integer || value instanceof String || value instanceof Boolean))
+            throw new IllegalStateException();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public VariableType getType() {
+        return type;
+    }
+
+    public Object getValue() throws UninitializedVariableException {
+        if (value == null) {
+            throw new UninitializedVariableException(this);
+        }
+
+        return value;
+    }
+
+    public Object getNullableValue() throws UninitializedVariableException {
+        return value;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
     }
 }

@@ -13,18 +13,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.language;
 
+import fi.jgke.miniplc.Token;
 import fi.jgke.miniplc.TokenValue;
+import fi.jgke.miniplc.interpreter.RuntimeException;
 
 import java.util.Arrays;
 
-public class UnexpectedTypeException extends RuntimeException {
-    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
-        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
+public class UnexpectedTokenException extends RuntimeException {
+    public UnexpectedTokenException(Token token) {
+        super("Unexpected token: " + token.getString());
     }
 
-    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
-        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
+    public UnexpectedTokenException(Token token, TokenValue... types) {
+        super("Unexpected token: " + token.getString() + ", expected one of " + Arrays.toString(types));
     }
 }
