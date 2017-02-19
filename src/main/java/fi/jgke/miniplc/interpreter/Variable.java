@@ -15,26 +15,47 @@
  */
 package fi.jgke.miniplc.interpreter;
 
+import fi.jgke.miniplc.exception.UninitializedVariableException;
+
 public class Variable {
     private String name;
     private final VariableType type;
     private final Object value;
 
+    private boolean typeMatches(VariableType type, Object value) {
+        return value == null
+                || (type.equals(VariableType.INT) && value instanceof Integer)
+                || (type.equals(VariableType.STRING) && value instanceof String)
+                || (type.equals(VariableType.BOOL) && value instanceof Boolean);
+    }
+
+    public Variable(VariableType type) {
+        this.type = type;
+        this.value = null;
+        this.name = null;
+    }
+
     public Variable(VariableType type, Object value) {
         this.type = type;
         this.value = value;
-        this.name = null;
-        if (!(value == null || value instanceof Integer || value instanceof String || value instanceof Boolean))
+        if (value == null || !typeMatches(type, value)) {
             throw new IllegalStateException();
+        }
+    }
 
+    public Variable(String name, VariableType type) {
+        this.name = name;
+        this.type = type;
+        this.value = null;
     }
 
     public Variable(String name, VariableType type, Object value) {
         this.name = name;
         this.type = type;
         this.value = value;
-        if (!(value == null || value instanceof Integer || value instanceof String || value instanceof Boolean))
+        if (value == null || !typeMatches(type, value)) {
             throw new IllegalStateException();
+        }
     }
 
     public String getName() {

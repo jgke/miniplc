@@ -13,12 +13,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.language;
+package fi.jgke.miniplc.exception;
 
-import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.tokenizer.TokenValue;
 
-public class AssertionFailureException extends RuntimeException {
-    public AssertionFailureException() {
-        super("Assertion failed");
+import java.util.Arrays;
+
+public class UnexpectedTypeException extends RuntimeException {
+    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
+        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
+    }
+
+    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
+        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
     }
 }

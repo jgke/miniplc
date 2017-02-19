@@ -15,10 +15,13 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.Token;
-import fi.jgke.miniplc.TokenValue;
+import fi.jgke.miniplc.tokenizer.Token;
+import fi.jgke.miniplc.tokenizer.TokenQueue;
+import fi.jgke.miniplc.tokenizer.TokenValue;
+import fi.jgke.miniplc.exception.OperationNotSupportedException;
+import fi.jgke.miniplc.exception.TypeException;
 import fi.jgke.miniplc.interpreter.*;
-import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.exception.RuntimeException;
 
 import java.util.Optional;
 
@@ -58,36 +61,37 @@ public class Expression implements ExecutableWithResult {
     }
 
     @Override
-    public Variable execute(Stack stack) throws RuntimeException {
+    public Variable execute(Context context) throws RuntimeException {
         if (!this.operator.isPresent()) {
-            return this.leftOperand.execute(stack);
+            return this.leftOperand.execute(context);
         }
         Token operator = this.operator.get();
+        TokenValue op = operator.getValue();
 
-        if (operator.getValue().equals(TokenValue.NOT)) {
-            Boolean result = (Boolean) leftOperand.execute(stack).getValue();
+        if (op.equals(TokenValue.NOT)) {
+            Boolean result = (Boolean) leftOperand.execute(context).getValue();
             return new Variable(VariableType.BOOL, !result);
         }
 
-        Variable left = leftOperand.execute(stack);
-        Variable right = rightOperand.get().execute(stack);
+        Variable left = leftOperand.execute(context);
+        Variable right = rightOperand.get().execute(context);
 
         if (!left.getType().equals(right.getType())) {
             throw new TypeException(left.getType(), right.getType());
         }
 
-        /* Booleans only support AND */
-        if (left.getType().equals(VariableType.BOOL) && !operator.getValue().equals(TokenValue.AND)) {
+        /* Booleans only support AND and EQUALS */
+        if (left.getType().equals(VariableType.BOOL) && !(op.equals(TokenValue.AND) || op.equals(TokenValue.EQUALS))) {
             throw new OperationNotSupportedException(left.getType(), operator);
         }
 
-        /* Strings only support PLUS */
-        if (left.getType().equals(VariableType.STRING) && !operator.getValue().equals(TokenValue.PLUS)) {
+        /* Strings only support PLUS and EQUALS */
+        if (left.getType().equals(VariableType.STRING) && !(op.equals(TokenValue.PLUS) || op.equals(TokenValue.EQUALS))) {
             throw new OperationNotSupportedException(left.getType(), operator);
         }
 
         /* Cannot use AND with numbers */
-        if (operator.getValue().equals(TokenValue.AND)) {
+        if (left.getType().equals(VariableType.INT) && op.equals(TokenValue.AND)) {
             throw new OperationNotSupportedException(left.getType(), operator);
         }
 
@@ -96,7 +100,7 @@ public class Expression implements ExecutableWithResult {
             case INT: {
                 Integer lval = (Integer) left.getValue();
                 Integer rval = (Integer) right.getValue();
-                switch (operator.getValue()) {
+                switch (op) {
                     case PLUS:
                         result = new Variable(VariableType.INT, lval + rval);
                         break;
@@ -123,7 +127,7 @@ public class Expression implements ExecutableWithResult {
             case STRING: {
                 String lval = (String) left.getValue();
                 String rval = (String) right.getValue();
-                switch (operator.getValue()) {
+                switch (op) {
                     case PLUS:
                         result = new Variable(VariableType.STRING, lval + rval);
                         break;
@@ -138,12 +142,22 @@ public class Expression implements ExecutableWithResult {
             case BOOL: {
                 Boolean lval = (Boolean) left.getValue();
                 Boolean rval = (Boolean) right.getValue();
-                result = new Variable(VariableType.BOOL, lval && rval);
+                switch (op) {
+                    case AND:
+                        result = new Variable(VariableType.BOOL, lval && rval);
+                        break;
+                    case EQUALS:
+                        result = new Variable(VariableType.BOOL, lval.equals(rval));
+                        break;
+                    default:
+                        throw new OperationNotSupportedException(left.getType(), operator);
+                }
                 break;
             }
             default:
                 throw new OperationNotSupportedException(left.getType(), operator);
         }
+        result.getValue();
         return result;
     }
 }

@@ -15,14 +15,13 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.TokenValue;
-import fi.jgke.miniplc.interpreter.RuntimeException;
-import fi.jgke.miniplc.interpreter.Stack;
-import fi.jgke.miniplc.interpreter.TokenQueue;
+import fi.jgke.miniplc.tokenizer.TokenValue;
+import fi.jgke.miniplc.exception.RuntimeException;
+import fi.jgke.miniplc.interpreter.Context;
+import fi.jgke.miniplc.tokenizer.TokenQueue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class Statements implements Executable {
     private List<Statement> statements;
@@ -45,8 +44,8 @@ public class Statements implements Executable {
     }
 
     @Override
-    public void execute(Stack stack) throws RuntimeException {
+    public void execute(Context context) throws RuntimeException {
         for (Statement statement : statements)
-            statement.execute(stack);
+            statement.execute(context);
     }
 }

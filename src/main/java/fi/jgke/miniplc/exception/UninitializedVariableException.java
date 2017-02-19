@@ -13,7 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.exception;
+
+import fi.jgke.miniplc.interpreter.Variable;
 
 public class UninitializedVariableException extends RuntimeException {
     public UninitializedVariableException(Variable variable) {

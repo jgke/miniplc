@@ -13,10 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.exception;
 
-public class VariableAlreadyDefinedException extends RuntimeException {
-    public VariableAlreadyDefinedException(String name) {
-        super("Variable already defined: " + name);
+public class UnexpectedCharacterException extends Throwable {
+    public UnexpectedCharacterException(char c) {
+        super("Unexpected character: " + c);
     }
 }

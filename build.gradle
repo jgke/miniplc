@@ -1,10 +1,28 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: "jacoco"
+
 repositories {
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
+    testCompile 'junit:junit:[4,)'
+    testCompile "org.mockito:mockito-core:[2,)"
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination "${buildDir}/jacocoHtml"
+    }
+}
+
+task applicationCodeCoverageReport(type:JacocoReport){
+    executionData run
+    sourceSets sourceSets.main
 }
 
 mainClassName = 'fi.jgke.miniplc.Miniplc'

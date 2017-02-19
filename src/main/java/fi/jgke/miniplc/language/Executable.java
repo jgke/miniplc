@@ -15,14 +15,11 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.interpreter.RuntimeException;
-import fi.jgke.miniplc.interpreter.Stack;
-import fi.jgke.miniplc.interpreter.TokenQueue;
-import fi.jgke.miniplc.interpreter.Variable;
-
-import java.util.Optional;
+import fi.jgke.miniplc.exception.RuntimeException;
+import fi.jgke.miniplc.interpreter.Context;
+import fi.jgke.miniplc.tokenizer.TokenQueue;
 
 public interface Executable {
     void parse(TokenQueue tokens) throws RuntimeException;
-    void execute(Stack stack) throws RuntimeException;
+    void execute(Context context) throws RuntimeException;
 }

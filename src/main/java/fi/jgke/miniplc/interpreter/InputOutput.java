@@ -1,24 +1,25 @@
 package fi.jgke.miniplc.interpreter;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
 import java.util.Scanner;
 
 public class InputOutput {
     private static Scanner input = new Scanner(System.in);
-    private static Queue<String> queue = new ArrayDeque<>();
+    private static InputOutput instance;
 
-    public static String readLine() {
-        if(!queue.isEmpty())
-            return queue.remove();
+    private InputOutput() {
+    }
+
+    public static InputOutput getInstance() {
+        if(InputOutput.instance == null)
+            InputOutput.instance = new InputOutput();
+        return InputOutput.instance;
+    }
+
+    public String readLine() {
         return input.nextLine();
     }
 
-    public static void print(Object output) {
+    public void print(Object output) {
         System.out.print(output);
-    }
-
-    public static void addNextLine(String s) {
-        queue.add(s);
     }
 }

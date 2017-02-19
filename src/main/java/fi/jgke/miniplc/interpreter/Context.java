@@ -15,16 +15,21 @@
  */
 package fi.jgke.miniplc.interpreter;
 
+import fi.jgke.miniplc.exception.UndefinedVariableException;
+import fi.jgke.miniplc.exception.VariableAlreadyDefinedException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Stack {
+public class Context {
     ArrayList<Map<String, Variable>> variables;
+    private InputOutput io;
 
-    public Stack() {
+    public Context(InputOutput io) {
         this.variables = new ArrayList<>();
         this.variables.add(new HashMap<>());
+        this.io = io;
     }
 
     public void addVariable(Variable variable) throws VariableAlreadyDefinedException {
@@ -63,5 +68,13 @@ public class Stack {
 
     public void popFrame() {
         variables.remove(variables.size() - 1);
+    }
+
+    public void print(Object object) {
+        io.print(object);
+    }
+
+    public String readLine() {
+        return io.readLine();
     }
 }

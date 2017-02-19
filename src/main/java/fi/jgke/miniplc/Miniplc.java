@@ -15,184 +15,15 @@
  */
 package fi.jgke.miniplc;
 
-import fi.jgke.miniplc.interpreter.*;
-import fi.jgke.miniplc.interpreter.RuntimeException;
-import fi.jgke.miniplc.language.Program;
-
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import fi.jgke.miniplc.exception.RuntimeException;
+import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 
 public class Miniplc {
-
-    private static final Map<Character, Character> escapeMap;
-    private static final Map<String, TokenValue> keywords;
-    private static final Map<TokenValue, Object> values;
-
-    static {
-        escapeMap = new HashMap<>();
-        escapeMap.put('n', '\n');
-        escapeMap.put('"', '"');
-        escapeMap.put('t', '\t');
-
-        keywords = new HashMap<>();
-        keywords.put("var", TokenValue.VAR);
-        keywords.put("for", TokenValue.FOR);
-        keywords.put("end", TokenValue.END);
-        keywords.put("in", TokenValue.IN);
-        keywords.put("do", TokenValue.DO);
-        keywords.put("read", TokenValue.READ);
-        keywords.put("print", TokenValue.PRINT);
-        keywords.put("int", TokenValue.INT);
-        keywords.put("string", TokenValue.STRING);
-        keywords.put("bool", TokenValue.BOOL);
-        keywords.put("assert", TokenValue.ASSERT);
-
-        values = new HashMap<>();
-        values.put(TokenValue.INT, VariableType.INT);
-        values.put(TokenValue.STRING, VariableType.STRING);
-        values.put(TokenValue.BOOL, VariableType.BOOL);
-    }
-
-    private static boolean isNumber(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    private static boolean isLetter(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-    }
-
-    private static boolean isIdentifierCharacter(char c) {
-        return isNumber(c) || isLetter(c);
-    }
-
-    private static Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
-        char beginning = input.remove();
-        while (Character.isWhitespace(beginning)) {
-            if (input.isEmpty())
-                return new Token(TokenValue.EOS);
-            beginning = input.remove();
-        }
-        switch (beginning) {
-            /* Simple syntax */
-            case ';':
-                return new Token(TokenValue.SEMICOLON);
-            case '(':
-                return new Token(TokenValue.OPEN_BRACE);
-            case ')':
-                return new Token(TokenValue.CLOSE_BRACE);
-
-            /* Operators, simple cases */
-            case '+':
-                return new Token(TokenValue.PLUS);
-            case '-':
-                return new Token(TokenValue.MINUS);
-            case '*':
-                return new Token(TokenValue.TIMES);
-            case '&':
-                return new Token(TokenValue.AND);
-            case '!':
-                return new Token(TokenValue.NOT);
-            case '<':
-                return new Token(TokenValue.LESSTHAN);
-            case '=':
-                return new Token(TokenValue.EQUALS);
-
-            /* Comment or times */
-            case '/':
-                if (input.peek() == '/') {
-                    /* It's a comment, remove the rest of the line */
-                    while (input.remove() != '\n') ;
-                    return readToken(input);
-                } else if (input.peek() == '*') {
-                    /* Multiline comment, remove until end of the multiline comment */
-                    while (input.remove() != '*' && input.peek() != '/') ;
-                    return readToken(input);
-                }
-                return new Token(TokenValue.TIMES);
-
-            /* Assignment or type definition */
-            case ':':
-                if (input.peek() == '=') {
-                    input.remove();
-                    return new Token(TokenValue.ASSIGN);
-                }
-                return new Token(TokenValue.COLON);
-
-            case '.':
-                char c = input.remove();
-                if (c != '.') {
-                    throw new UnexpectedCharacterException(c);
-                }
-                return new Token(TokenValue.RANGE);
-        }
-
-        String token = "";
-
-        if (beginning == '"') {
-            while (true) {
-                char c = input.remove();
-                if (c == '"')
-                    return new Token(TokenValue.STRINGVAR, token);
-                if (c == '\\') {
-                    char cc = input.remove();
-                    c = escapeMap.getOrDefault(cc, cc);
-                }
-                token += c;
-            }
-        }
-
-        token += beginning;
-
-        if (!isLetter(beginning) && !isNumber(beginning)) {
-            throw new UnexpectedCharacterException(beginning);
-        }
-
-        if (beginning >= '0' && beginning <= '9') {
-            while (true) {
-                char c = input.peek();
-                if (isNumber(c))
-                    token += c;
-                else if (isLetter(c))
-                    throw new UnexpectedCharacterException(c);
-                else
-                    return new Token(TokenValue.INTVAR, Integer.parseInt(token));
-                input.remove();
-            }
-        }
-
-        while (true) {
-            char c = input.peek();
-            if (isIdentifierCharacter(c))
-                token += c;
-            else {
-                TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
-                Object tokenValue = values.getOrDefault(type, token);
-                return new Token(type, tokenValue);
-            }
-            input.remove();
-        }
-    }
-
-    private static TokenQueue tokenize(String input) throws UnexpectedCharacterException {
-        TokenQueue tokenQueue = new TokenQueue();
-        Queue<Character> queue = new ArrayDeque<>();
-        for (Character c : input.toCharArray())
-            queue.add(c);
-        while (!queue.isEmpty()) {
-            Token token = readToken(queue);
-            if (token.getValue().equals(TokenValue.EOS))
-                break;
-            tokenQueue.add(token);
-        }
-        return tokenQueue;
-    }
 
     public static void main(String[] args) throws UnexpectedCharacterException, RuntimeException {
         String[] samples = {
                 "var X : int := 4 + (6 * 2);\n" +
-                        "print X;" ,
+                        "print X;",
 
                 "var nTimes : int := 0;\n" +
                         "print \"How many times?\"; \n" +
@@ -215,17 +46,11 @@ public class Miniplc {
                         "     print \"The result is: \";\n" +
                         "     print v;"
         };
-
-        /* Comment these out for real input */
-        InputOutput.addNextLine("5"); // sample 2
-        InputOutput.addNextLine("4"); // sample 3
-
+/*
         for (String s : samples) {
-            TokenQueue tokenQueue = tokenize(s);
-
-            Program program = new Program();
-            program.parse(tokenQueue);
-            program.execute(new Stack());
+            Executor executor = new Executor(s);
+            executor.execute(InputOutput.getInstance());
         }
+        */
     }
 }

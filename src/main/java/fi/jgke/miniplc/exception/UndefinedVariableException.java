@@ -13,10 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.exception;
 
-public class RuntimeException extends Throwable {
-    public RuntimeException(String s) {
-        super(s);
+public class UndefinedVariableException extends RuntimeException {
+    public UndefinedVariableException(String name) {
+        super("Undefined variable: " + name);
     }
 }

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc;
+package fi.jgke.miniplc.tokenizer;
 
 import fi.jgke.miniplc.interpreter.VariableType;
 

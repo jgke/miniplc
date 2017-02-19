@@ -15,18 +15,17 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.Token;
-import fi.jgke.miniplc.TokenValue;
-import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.tokenizer.Token;
+import fi.jgke.miniplc.tokenizer.TokenQueue;
+import fi.jgke.miniplc.tokenizer.TokenValue;
+import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.interpreter.*;
-
-import java.util.Optional;
 
 public class Operand implements ExecutableWithResult {
 
     @FunctionalInterface
     public interface Producer {
-        Variable apply(Stack stack) throws RuntimeException;
+        Variable apply(Context context) throws RuntimeException;
     }
 
     Producer producer;
@@ -52,21 +51,21 @@ public class Operand implements ExecutableWithResult {
                 producer = (s) -> new Variable(VariableType.BOOL, token.getContent());
                 break;
             case IDENTIFIER:
-                producer = (s) -> s.getVariable(token.getString());
+                producer = (c) -> c.getVariable(token.getString());
                 break;
             case OPEN_BRACE:
                 Expression expression = new Expression();
                 expression.parse(tokens);
-
                 producer = expression::execute;
-
                 tokens.getExpectedToken(TokenValue.CLOSE_BRACE);
                 break;
         }
     }
 
     @Override
-    public Variable execute(Stack stack) throws RuntimeException {
-        return producer.apply(stack);
+    public Variable execute(Context context) throws RuntimeException {
+        Variable variable = producer.apply(context);
+        variable.getValue();
+        return variable;
     }
 }

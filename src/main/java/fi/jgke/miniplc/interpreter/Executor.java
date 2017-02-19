@@ -13,28 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.language;
+package fi.jgke.miniplc.interpreter;
 
+import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.exception.RuntimeException;
-import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
+import fi.jgke.miniplc.language.Program;
 
-public class Program implements Executable {
+public class Executor {
 
-    private Statements statements;
+    String script;
 
-    public Program() {
-        statements = new Statements();
+    public Executor(String script) {
+        this.script = script;
     }
 
-    // <prog>   ::=  <stmts>
-    @Override
-    public void parse(TokenQueue tokens) throws RuntimeException {
-        statements.parse(tokens);
-    }
-
-    @Override
-    public void execute(Context context) throws RuntimeException {
-        statements.execute(context);
+    public void execute(InputOutput io) throws UnexpectedCharacterException, RuntimeException {
+        TokenQueue queue = new TokenQueue(script);
+        Program program = new Program();
+        program.parse(queue);
+        program.execute(new Context(io));
     }
 }

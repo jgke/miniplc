@@ -1,4 +1,4 @@
-package fi.jgke.miniplc;
+package fi.jgke.miniplc.tokenizer;
 
 public enum TokenValue {
     /* keywords */

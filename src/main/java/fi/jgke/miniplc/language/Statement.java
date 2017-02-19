@@ -15,10 +15,14 @@
  */
 package fi.jgke.miniplc.language;
 
-import fi.jgke.miniplc.Token;
-import fi.jgke.miniplc.TokenValue;
+import fi.jgke.miniplc.tokenizer.Token;
+import fi.jgke.miniplc.tokenizer.TokenQueue;
+import fi.jgke.miniplc.tokenizer.TokenValue;
+import fi.jgke.miniplc.exception.AssertionFailureException;
+import fi.jgke.miniplc.exception.TypeException;
+import fi.jgke.miniplc.exception.UnexpectedTokenException;
 import fi.jgke.miniplc.interpreter.*;
-import fi.jgke.miniplc.interpreter.RuntimeException;
+import fi.jgke.miniplc.exception.RuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +43,8 @@ public class Statement implements Executable {
             }
 
             @Override
-            public Variable execute(Stack stack) throws RuntimeException {
-                return new Variable(type, null);
+            public Variable execute(Context context) throws RuntimeException {
+                return new Variable(type);
             }
         }
 
@@ -68,10 +72,16 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            ExecutableWithResult value = this.value.orElse(new UninitializedVariable(type));
-            Variable variable = new Variable(variableName, type, value.execute(stack).getNullableValue());
-            stack.addVariable(variable);
+        public void execute(Context context) throws RuntimeException {
+            ExecutableWithResult executable = this.value.orElse(new UninitializedVariable(type));
+            Object value = executable.execute(context).getNullableValue();
+            Variable variable;
+            if(value != null) {
+                variable = new Variable(variableName, type, value);
+            } else {
+                variable = new Variable(variableName, type);
+            }
+            context.addVariable(variable);
         }
     }
 
@@ -92,16 +102,16 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            VariableType type = stack.getVariable(identifier).getType();
-            Variable variable = value.execute(stack);
+        public void execute(Context context) throws RuntimeException {
+            VariableType type = context.getVariable(identifier).getType();
+            Variable variable = value.execute(context);
             variable.setName(identifier);
 
             if (!variable.getType().equals(type)) {
                 throw new TypeException(type, variable.getType());
             }
 
-            stack.updateVariable(variable);
+            context.updateVariable(variable);
         }
     }
 
@@ -134,21 +144,21 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            Integer low = (Integer) loopStart.execute(stack).getValue();
-            Integer high = (Integer) loopEnd.execute(stack).getValue();
+        public void execute(Context context) throws RuntimeException {
+            Integer low = (Integer) loopStart.execute(context).getValue();
+            Integer high = (Integer) loopEnd.execute(context).getValue();
 
             Variable loopVariable = new Variable(loopVariableName, VariableType.INT, low);
-            stack.updateVariable(loopVariable);
+            context.updateVariable(loopVariable);
 
             for (Integer i = low; i <= high; i++) {
-                stack.pushFrame();
+                context.pushFrame();
 
-                loopBody.execute(stack);
+                loopBody.execute(context);
 
-                stack.popFrame();
+                context.popFrame();
                 loopVariable = new Variable(loopVariableName, VariableType.INT, i+1);
-                stack.updateVariable(loopVariable);
+                context.updateVariable(loopVariable);
             }
         }
     }
@@ -162,8 +172,8 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            String input = InputOutput.readLine();
+        public void execute(Context context) throws RuntimeException {
+            String input = context.readLine();
             Variable variable;
 
             /* Why, MiniPL language ;__;
@@ -177,7 +187,7 @@ public class Statement implements Executable {
                 variable = new Variable(identifier, VariableType.STRING, input);
             }
 
-            stack.updateVariable(variable);
+            context.updateVariable(variable);
         }
     }
 
@@ -191,9 +201,9 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            Object value = this.value.execute(stack).getValue();
-            InputOutput.print(value);
+        public void execute(Context context) throws RuntimeException {
+            Object value = this.value.execute(context).getValue();
+            context.print(value);
         }
     }
 
@@ -207,8 +217,8 @@ public class Statement implements Executable {
         }
 
         @Override
-        public void execute(Stack stack) throws RuntimeException {
-            Boolean value = (Boolean) this.value.execute(stack).getValue();
+        public void execute(Context context) throws RuntimeException {
+            Boolean value = (Boolean) this.value.execute(context).getValue();
             if (!value) {
                 throw new AssertionFailureException();
             }
@@ -261,9 +271,9 @@ public class Statement implements Executable {
     }
 
     @Override
-    public void execute(Stack stack) throws RuntimeException {
+    public void execute(Context context) throws RuntimeException {
         for (Executable executable : this.contents) {
-            executable.execute(stack);
+            executable.execute(context);
         }
     }
 }

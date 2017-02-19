@@ -13,18 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.exception;
 
-import fi.jgke.miniplc.TokenValue;
-
-import java.util.Arrays;
-
-public class UnexpectedTypeException extends RuntimeException {
-    public UnexpectedTypeException(TokenValue value, TokenValue expected) {
-        super("Unexpected type: " + value.toString() + " (expected: " + expected.toString() + ")");
-    }
-
-    public UnexpectedTypeException(TokenValue value, TokenValue[] types) {
-        super("Unexpected type: " + value.toString() + " (expected one of: " + Arrays.toString(types) + ")");
+public class VariableAlreadyDefinedException extends RuntimeException {
+    public VariableAlreadyDefinedException(String name) {
+        super("Variable already defined: " + name);
     }
 }

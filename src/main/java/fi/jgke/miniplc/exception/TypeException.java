@@ -13,10 +13,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package fi.jgke.miniplc.language;
+package fi.jgke.miniplc.exception;
 
-import fi.jgke.miniplc.TokenValue;
-import fi.jgke.miniplc.interpreter.RuntimeException;
 import fi.jgke.miniplc.interpreter.VariableType;
 
 public class TypeException extends RuntimeException {
