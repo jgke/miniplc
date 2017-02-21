@@ -233,11 +233,11 @@ public class TokenQueue {
         return token;
     }
 
-    public Token peek() {
-        return tokens.peek();
-    }
-
     public boolean isEmpty() {
         return tokens.isEmpty();
+    }
+
+    public Token element() {
+        return tokens.element();
     }
 }

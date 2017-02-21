@@ -34,7 +34,7 @@ public class Expression implements ExecutableWithResult {
     @Override
     public void parse(TokenQueue tokens) throws RuntimeException {
         Token operator;
-        if (tokens.peek().getValue().equals(TokenValue.NOT)) {
+        if (tokens.element().getValue().equals(TokenValue.NOT)) {
             operator = tokens.getExpectedToken(TokenValue.NOT);
             leftOperand = new Operand();
             leftOperand.parse(tokens);
@@ -42,7 +42,7 @@ public class Expression implements ExecutableWithResult {
             leftOperand = new Operand();
             leftOperand.parse(tokens);
 
-            if (!tokens.peek().getValue().isOperator()) {
+            if (!tokens.element().getValue().isOperator()) {
                 operator = null;
             } else {
                 operator = tokens.remove();

@@ -61,7 +61,7 @@ public class Statement implements Executable {
             variableName = identifier.getString();
             type = typeToken.getVariableType();
 
-            if (tokens.peek().getValue() == TokenValue.ASSIGN) {
+            if (tokens.element().getValue() == TokenValue.ASSIGN) {
                 tokens.getExpectedToken(TokenValue.ASSIGN);
                 Expression expression = new Expression();
                 expression.parse(tokens);

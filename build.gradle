@@ -26,3 +26,9 @@ task applicationCodeCoverageReport(type:JacocoReport){
 }
 
 mainClassName = 'fi.jgke.miniplc.Miniplc'
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'fi.jgke.miniplc.Miniplc'
+    }
+}

@@ -17,40 +17,31 @@ package fi.jgke.miniplc;
 
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.exception.UnexpectedCharacterException;
+import fi.jgke.miniplc.interpreter.Executor;
+import fi.jgke.miniplc.interpreter.InputOutput;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Miniplc {
 
-    public static void main(String[] args) throws UnexpectedCharacterException, RuntimeException {
-        String[] samples = {
-                "var X : int := 4 + (6 * 2);\n" +
-                        "print X;",
-
-                "var nTimes : int := 0;\n" +
-                        "print \"How many times?\"; \n" +
-                        "read nTimes; \n" +
-                        "var x : int;\n" +
-                        "for x in 0..nTimes-1 do \n" +
-                        "    print x;\n" +
-                        "    print \" : Hello, World!\\n\";\n" +
-                        "end for;\n" +
-                        "assert (x = nTimes);\n",
-
-                "print \"Give a number\"; \n" +
-                        "     var n : int;\n" +
-                        "     read n;\n" +
-                        "     var v : int := 1;\n" +
-                        "     var i : int;\n" +
-                        "     for i in 1..n do \n" +
-                        "         v := v * i;\n" +
-                        "     end for;\n" +
-                        "     print \"The result is: \";\n" +
-                        "     print v;"
-        };
-/*
-        for (String s : samples) {
-            Executor executor = new Executor(s);
-            executor.execute(InputOutput.getInstance());
+    public static void main(String[] args) throws UnexpectedCharacterException, RuntimeException, IOException {
+        if (args.length != 1) {
+            System.err.println("Invalid number of arguments: expected one");
+            System.exit(-1);
         }
-        */
+
+        File file = new File(args[0]);
+        if (!file.exists()) {
+            System.err.println("Invalid argument: file not found");
+            System.exit(-1);
+        }
+
+        String content = new String(Files.readAllBytes(Paths.get(args[0])));
+        Executor executor = new Executor(content);
+        executor.execute(InputOutput.getInstance());
     }
+
 }

@@ -34,7 +34,7 @@ public class Statements implements Executable {
     @Override
     public void parse(TokenQueue tokens) throws RuntimeException {
         /* Peek out END so that parsing stops at block scope */
-        while(!tokens.isEmpty() && !tokens.peek().getValue().equals(TokenValue.END)) {
+        while(!tokens.isEmpty() && !tokens.element().getValue().equals(TokenValue.END)) {
             Statement statement = new Statement();
             statement.parse(tokens);
             statements.add(statement);
