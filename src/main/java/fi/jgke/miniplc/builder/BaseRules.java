@@ -23,7 +23,7 @@ public class BaseRules {
         };
     }
 
-    public static Rule when(Rule... rules) {
+    public static Rule all(Rule... rules) {
         return new Rule() {
             public boolean matches(TokenQueue queue) {
                 return rules[0].matches(queue);
@@ -52,7 +52,7 @@ public class BaseRules {
         };
     }
 
-    public static Rule or(Rule... rules) {
+    public static Rule any(Rule... rules) {
         return new Rule() {
             @Override
             public boolean matches(TokenQueue tokenQueue) {

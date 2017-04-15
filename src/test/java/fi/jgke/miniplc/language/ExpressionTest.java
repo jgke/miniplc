@@ -55,7 +55,7 @@ public class ExpressionTest {
     @Test
     public void parseNot() throws UnexpectedCharacterException, RuntimeException {
         Token op = new Token(TokenValue.NOT);
-        Token arg = new Token(TokenValue.BOOLVAR, true);
+        Token arg = new Token(TokenValue.BOOLCONST, true);
         testWith(VariableType.BOOL, false, op, arg);
     }
 
@@ -69,7 +69,7 @@ public class ExpressionTest {
 
     private void testInteger(int left, TokenValue op, int right, int expected)
             throws UnexpectedCharacterException, RuntimeException {
-        test(left, TokenValue.INTVAR, op, right, TokenValue.INTVAR, expected, VariableType.INT);
+        test(left, TokenValue.INTCONST, op, right, TokenValue.INTCONST, expected, VariableType.INT);
     }
 
     @Test
@@ -94,31 +94,31 @@ public class ExpressionTest {
 
     @Test
     public void parseIntegerLessThan() throws UnexpectedCharacterException, RuntimeException {
-        test(5, TokenValue.INTVAR, TokenValue.LESSTHAN, 3, TokenValue.INTVAR, false, VariableType.BOOL);
+        test(5, TokenValue.INTCONST, TokenValue.LESSTHAN, 3, TokenValue.INTCONST, false, VariableType.BOOL);
     }
 
     @Test
     public void parseIntegerEquals() throws UnexpectedCharacterException, RuntimeException {
-        test(5, TokenValue.INTVAR, TokenValue.EQUALS, 3, TokenValue.INTVAR, false, VariableType.BOOL);
+        test(5, TokenValue.INTCONST, TokenValue.EQUALS, 3, TokenValue.INTCONST, false, VariableType.BOOL);
     }
 
     @Test
     public void parseStringPlus() throws UnexpectedCharacterException, RuntimeException {
-        test("foo", TokenValue.STRINGVAR, TokenValue.PLUS, "bar", TokenValue.STRINGVAR, "foobar", VariableType.STRING);
+        test("foo", TokenValue.STRINGCONST, TokenValue.PLUS, "bar", TokenValue.STRINGCONST, "foobar", VariableType.STRING);
     }
 
     @Test
     public void parseStringEquals() throws UnexpectedCharacterException, RuntimeException {
-        test("foo", TokenValue.STRINGVAR, TokenValue.EQUALS, "bar", TokenValue.STRINGVAR, false, VariableType.BOOL);
+        test("foo", TokenValue.STRINGCONST, TokenValue.EQUALS, "bar", TokenValue.STRINGCONST, false, VariableType.BOOL);
     }
 
     @Test
     public void parseBoolAnd() throws UnexpectedCharacterException, RuntimeException {
-        test(false, TokenValue.BOOLVAR, TokenValue.AND, true, TokenValue.BOOLVAR, false, VariableType.BOOL);
+        test(false, TokenValue.BOOLCONST, TokenValue.AND, true, TokenValue.BOOLCONST, false, VariableType.BOOL);
     }
 
     @Test
     public void parseBoolEquals() throws UnexpectedCharacterException, RuntimeException {
-        test(false, TokenValue.BOOLVAR, TokenValue.EQUALS, true, TokenValue.BOOLVAR, false, VariableType.BOOL);
+        test(false, TokenValue.BOOLCONST, TokenValue.EQUALS, true, TokenValue.BOOLCONST, false, VariableType.BOOL);
     }
 }

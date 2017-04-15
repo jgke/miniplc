@@ -27,10 +27,10 @@ public class TokenQueueTest {
         tokens.put("/* foo */ +", TokenValue.PLUS);
         tokens.put("// foo bar\n-", TokenValue.MINUS);
         tokens.put("foo", TokenValue.IDENTIFIER);
-        tokens.put("100", TokenValue.INTVAR);
-        tokens.put("\"foo\nbar\"", TokenValue.STRINGVAR);
-        tokens.put("true", TokenValue.BOOLVAR);
-        tokens.put("false", TokenValue.BOOLVAR);
+        tokens.put("100", TokenValue.INTCONST);
+        tokens.put("\"foo\nbar\"", TokenValue.STRINGCONST);
+        tokens.put("true", TokenValue.BOOLCONST);
+        tokens.put("false", TokenValue.BOOLCONST);
         tokens.put("var", TokenValue.VAR);
         tokens.put("for", TokenValue.FOR);
         tokens.put("end", TokenValue.END);

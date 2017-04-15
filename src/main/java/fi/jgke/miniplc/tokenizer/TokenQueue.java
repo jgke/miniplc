@@ -20,7 +20,6 @@ import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.exception.UnexpectedTypeException;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 public class TokenQueue {
     ArrayDeque<Token> tokens;
@@ -80,7 +79,7 @@ public class TokenQueue {
 
     private Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
         Character beginning = input.remove();
-        while (Character.isWhitespace(beginning) || beginning == null) {
+        while (Character.isWhitespace(beginning)) {
             if (input.isEmpty())
                 return new Token(TokenValue.EOS);
             beginning = input.remove();
@@ -155,7 +154,7 @@ public class TokenQueue {
                 }
                 char c = input.remove();
                 if (c == '"')
-                    return new Token(TokenValue.STRINGVAR, token);
+                    return new Token(TokenValue.STRINGCONST, token);
                 if (c == '\\') {
                     char cc = input.remove();
                     c = escapeMap.getOrDefault(cc, cc);
@@ -178,7 +177,7 @@ public class TokenQueue {
                 else if (isLetter(c))
                     throw new UnexpectedCharacterException(c);
                 else
-                    return new Token(TokenValue.INTVAR, Integer.parseInt(token));
+                    return new Token(TokenValue.INTCONST, Integer.parseInt(token));
                 input.remove();
             }
         }
@@ -200,9 +199,9 @@ public class TokenQueue {
 
     private Token getTokenFromWord(String token) {
         if(token.equals("true")) {
-            return new Token(TokenValue.BOOLVAR, true);
+            return new Token(TokenValue.BOOLCONST, true);
         } else if (token.equals("false")) {
-            return new Token(TokenValue.BOOLVAR, false);
+            return new Token(TokenValue.BOOLCONST, false);
         } else if (token.equals("int")) {
             return new Token(TokenValue.TYPE, VariableType.INT);
         } else if (token.equals("string")) {

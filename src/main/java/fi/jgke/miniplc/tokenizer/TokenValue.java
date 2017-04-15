@@ -11,7 +11,7 @@ public enum TokenValue {
     PLUS, MINUS, TIMES, DIVIDE, LESSTHAN, EQUALS, AND, NOT,
 
     /* "..." 123 */
-    STRINGVAR, INTVAR, BOOLVAR,
+    STRINGCONST, INTCONST, BOOLCONST,
 
     /* any type identifier */
     TYPE,
@@ -19,16 +19,14 @@ public enum TokenValue {
     /* any variable identifier */
     IDENTIFIER,
 
-    /* End of stream */
+    /* end of stream */
     EOS;
-
-
 
     public boolean isOperator() {
         TokenValue[] values = {TokenValue.PLUS, TokenValue.MINUS, TokenValue.TIMES, TokenValue.DIVIDE,
                 TokenValue.LESSTHAN, TokenValue.EQUALS, TokenValue.AND};
-        for(TokenValue value : values) {
-            if(this.equals(value)) {
+        for (TokenValue value : values) {
+            if (this.equals(value)) {
                 return true;
             }
         }

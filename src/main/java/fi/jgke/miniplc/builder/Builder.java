@@ -19,48 +19,49 @@ public class Builder {
 
     public static void parseAndExecute(TokenQueue tokenQueue, Context context) {
         statements().consume(tokenQueue).execute(context);
+        eos.consume(tokenQueue);
         assert tokenQueue.isEmpty();
     }
 
     public static Rule statements() {
         return
-                or(
+                any(
                         rule(
-                                when(statement(), semicolon, lazy(Builder::statements)),
+                                all(statement(), semicolon, lazy(Builder::statements)),
                                 (rules, context) -> {
                                     rules.get(0).execute(context);
                                     rules.get(2).execute(context);
                                     return null;
                                 }
-                        ), eos, empty()
+                        ), empty()
                 );
     }
 
     public static Rule statement() {
         return
-                or(
+                any(
                         rule(
-                                when(var, varIdent, colon, type, maybe(assign, expression())),
+                                all(var, varIdent, colon, type, maybe(assign, expression())),
                                 Builder::createVariable
                         ),
                         rule(
-                                when(varIdent, assign, expression()),
+                                all(varIdent, assign, expression()),
                                 Builder::updateVariable
                         ),
                         rule(
-                                when(print, expression()),
+                                all(print, expression()),
                                 Builder::printExpression
                         ),
                         rule(
-                                when(read, varIdent),
+                                all(read, varIdent),
                                 Builder::readVariable
                         ),
                         rule(
-                                when(Assert, openbrace, expression(), closebrace),
+                                all(Assert, openbrace, expression(), closebrace),
                                 Builder::assertExpression
                         ),
                         rule(
-                                when(For, varIdent, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
+                                all(For, varIdent, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
                                 Builder::forLoop
                         )
 
@@ -69,35 +70,35 @@ public class Builder {
     }
 
     public static Rule expression() {
-        return or(
+        return any(
                 rule(
-                        when(not, operand()),
+                        all(not, operand()),
                         (rules, context) -> {
                             Boolean value = (Boolean) rules.get(1).getVariable(context).getValue();
                             return new Variable(VariableType.BOOL, !value);
                         }
                 ),
                 rule(
-                        when(operand(), maybe(operator(), operand())),
+                        all(operand(), maybe(operator(), operand())),
                         Builder::handleOperation
                 )
         );
     }
 
     public static Rule operator() {
-        return or(plus, minus, times, divide, lessthan, equals);
+        return any(plus, minus, times, divide, lessthan, equals);
     }
 
     public static Rule operand() {
-        return or(
+        return any(
                 rule(
-                        when(or(intvar, stringvar, boolvar)),
+                        all(any(intconst, stringconst, boolconst)),
                         (rules, context) -> handleConstant(rules)),
                 rule(
-                        when(varIdent),
+                        all(varIdent),
                         (rules, context) -> context.getVariable(rules.get(0).getToken().getString())),
                 rule(
-                        when(openbrace, lazy(Builder::expression), closebrace),
+                        all(openbrace, lazy(Builder::expression), closebrace),
                         (rules, context) -> rules.get(1).getVariable(context)
                 )
         );

@@ -58,17 +58,17 @@ public class OperandTest {
 
     @Test
     public void parseInt() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.INTVAR, VariableType.INT, 5);
+        testWith(TokenValue.INTCONST, VariableType.INT, 5);
     }
 
     @Test
     public void parseString() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.STRINGVAR, VariableType.STRING, "Foo");
+        testWith(TokenValue.STRINGCONST, VariableType.STRING, "Foo");
     }
 
     @Test
     public void parseBoolean() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.BOOLVAR, VariableType.BOOL, true);
+        testWith(TokenValue.BOOLCONST, VariableType.BOOL, true);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class OperandTest {
     @Test
     public void parseStatement() throws UnexpectedCharacterException, RuntimeException {
         Token left = new Token(TokenValue.OPEN_BRACE);
-        Token middle = new Token(TokenValue.INTVAR, 5);
+        Token middle = new Token(TokenValue.INTCONST, 5);
         Token right = new Token(TokenValue.CLOSE_BRACE);
         Context context = new Context(InputOutput.getInstance());
         context.addVariable(new Variable("bar", VariableType.STRING, "foo"));

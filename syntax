@@ -1,6 +1,7 @@
  <prog>   ::=  <stmts>
- <stmts>  ::=  <stmt> ";" ( <stmt> ";" )*
- <stmt>   ::=  "var" <var_ident> ":" <type> <var_assign>
+ <stmts>  ::=  <stmt> ";" <stmts>
+           |   epsilon
+ <stmt>   ::=  "var" <var_ident> ":" <type> [":=" <expr>]
            |   <var_ident> ":=" <expr>  
            |   "for" <var_ident> "in" <expr> ".." <expr> "do" 
                   <stmts> "end" "for"  
@@ -8,17 +9,12 @@
            |   "print" <expr>  
            |   "assert" "(" <expr> ")"
 
-var_assign  ::= ":=" <expr>
-             | epsilon
-
  <expr>   ::= <unary_op> <opnd>
-            | <opnd> <expr_b>
-
-<expr_b> ::= epsilon
-            | <binary_op> <opnd>
+            | <opnd> [<binary_op> <opnd>]
 
  <opnd>   ::=  <int>
            |   <string>
+           |   <bool>
            |   <var_ident>
            |   "(" expr ")"
               
