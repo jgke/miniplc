@@ -29,8 +29,8 @@ public class ConsumedRule {
     }
 
     @SuppressWarnings("unchecked")
-    public List<ConsumedRule> getList(Context context) {
-        return getValue(context, List.class);
+    public List<ConsumedRule> getList() {
+        return getValue(null, List.class);
     }
 
     public Variable getVariable(Context context) {

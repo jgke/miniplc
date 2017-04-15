@@ -10,11 +10,10 @@ import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
 
 import java.util.List;
-import java.util.function.Supplier;
 
-import static fi.jgke.miniplc.builder.Empty.empty;
-import static fi.jgke.miniplc.builder.For.when;
-import static fi.jgke.miniplc.builder.Or.or;
+import static fi.jgke.miniplc.builder.BaseRules.*;
+import static fi.jgke.miniplc.builder.Terminal.*;
+import static fi.jgke.miniplc.builder.Terminal.Do;
 
 public class Builder {
 
@@ -23,7 +22,7 @@ public class Builder {
         assert tokenQueue.isEmpty();
     }
 
-    private static Rule statements() {
+    public static Rule statements() {
         return
                 or(
                         rule(
@@ -37,97 +36,32 @@ public class Builder {
                 );
     }
 
-    private static Rule statement() {
+    public static Rule statement() {
         return
                 or(
                         rule(
-                                when(var, varIdent, colon, type, Maybe.maybe(assign, expression())),
-                                (rules, context) -> {
-                                    String name = rules.get(1).getToken().getString();
-                                    VariableType type = rules.get(3).getToken().getVariableType();
-                                    List<ConsumedRule> value = rules.get(4).getList(context);
-                                    if (!value.isEmpty()) {
-                                        Variable variable = value.get(1).getVariable(context);
-                                        if (!variable.getType().equals(type))
-                                            throw new TypeException(type, variable.getType());
-                                        variable.setName(name);
-                                        context.addVariable(variable);
-                                    } else {
-                                        context.addVariable(new Variable(name, type));
-                                    }
-                                    return null;
-                                }
+                                when(var, varIdent, colon, type, maybe(assign, expression())),
+                                Builder::createVariable
                         ),
                         rule(
                                 when(varIdent, assign, expression()),
-                                (rules, context) -> {
-                                    String name = rules.get(0).getToken().getString();
-                                    Variable variable = context.getVariable(name);
-                                    Variable newValue = rules.get(2).getVariable(context);
-                                    context.updateVariable(new Variable(name, variable.getType(), newValue.getValue()));
-                                    return null;
-                                }
+                                Builder::updateVariable
                         ),
                         rule(
                                 when(print, expression()),
-                                (rules, context) -> {
-                                    Variable output = rules.get(1).getVariable(context);
-                                    context.print(output.getValue());
-                                    return null;
-                                }
+                                Builder::printExpression
                         ),
                         rule(
                                 when(read, varIdent),
-                                (rules, context) -> {
-                                    String name = rules.get(1).getToken().getString();
-                                    String input = context.readLine();
-                                    Variable variable;
-
-                                    /* Why, MiniPL language ;__;
-                                    * read :: () -> Int
-                                    * read :: () -> String
-                                    */
-                                    try {
-                                        Integer value = Integer.parseInt(input);
-                                        variable = new Variable(name, VariableType.INT, value);
-                                    } catch (NumberFormatException ignored) {
-                                        variable = new Variable(name, VariableType.STRING, input);
-                                    }
-
-                                    context.updateVariable(variable);
-                                    return null;
-                                }
+                                Builder::readVariable
                         ),
                         rule(
                                 when(Assert, openbrace, expression(), closebrace),
-                                (rules, context) -> {
-                                    Boolean value = (Boolean)rules.get(2).getVariable(context).getValue();
-                                    assert value;
-                                    return null;
-                                }
+                                Builder::assertExpression
                         ),
                         rule(
-                                when(For, varIdent, in, expression(), range, expression(), Do, lazy(() -> statements()), end, For),
-                                (rules, context) -> {
-                                    String loopVariableName = rules.get(1).getToken().getString();
-                                    Integer start = (Integer)rules.get(3).getVariable(context).getValue();
-                                    Integer end = (Integer)rules.get(5).getVariable(context).getValue();
-
-                                    Variable loopVariable = new Variable(loopVariableName, VariableType.INT, start);
-                                    context.updateVariable(loopVariable);
-
-                                    for (Integer i = start; i <= end; i++) {
-                                        context.pushFrame();
-
-                                        rules.get(7).execute(context);
-
-                                        context.popFrame();
-                                        loopVariable = new Variable(loopVariableName, VariableType.INT, i+1);
-                                        context.updateVariable(loopVariable);
-                                    }
-
-                                    return null;
-                                }
+                                when(For, varIdent, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
+                                Builder::forLoop
                         )
 
 
@@ -144,22 +78,13 @@ public class Builder {
                         }
                 ),
                 rule(
-                        when(operand(), Maybe.maybe(operator(), operand())),
-                        (rules, context) -> {
-                            Variable left = rules.get(0).getVariable(context);
-                            List<ConsumedRule> b = rules.get(1).getList(context);
-                            if (!b.isEmpty()) {
-                                Token operator = b.get(0).getToken();
-                                Variable right = b.get(1).getVariable(context);
-                                return handleOperation(context, left, operator, right);
-                            }
-                            return left;
-                        }
+                        when(operand(), maybe(operator(), operand())),
+                        Builder::handleOperation
                 )
         );
     }
 
-    private static Rule operator() {
+    public static Rule operator() {
         return or(plus, minus, times, divide, lessthan, equals);
     }
 
@@ -167,17 +92,7 @@ public class Builder {
         return or(
                 rule(
                         when(or(intvar, stringvar, boolvar)),
-                        (rules, context) -> {
-                            Token token = rules.get(0).getToken();
-                            Object content = token.getContent();
-                            if (content instanceof Integer)
-                                return new Variable(VariableType.INT, token.getContent());
-                            else if (content instanceof String)
-                                return new Variable(VariableType.STRING, token.getContent());
-                            else if (content instanceof Boolean)
-                                return new Variable(VariableType.BOOL, token.getContent());
-                            throw new UnsupportedOperationException();
-                        }),
+                        (rules, context) -> handleConstant(rules)),
                 rule(
                         when(varIdent),
                         (rules, context) -> context.getVariable(rules.get(0).getToken().getString())),
@@ -185,44 +100,107 @@ public class Builder {
                         when(openbrace, lazy(Builder::expression), closebrace),
                         (rules, context) -> rules.get(1).getVariable(context)
                 )
-
         );
     }
 
-    private static Rule lazy(Supplier<Rule> provider) {
-        return new Rule() {
-            @Override
-            public boolean matches(TokenQueue tokenQueue) {
-                return provider.get().matches(tokenQueue);
-            }
-
-            @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
-                return provider.get().consume(tokenQueue);
-            }
-
-            public String str() {
-                return "Lazy {}";
-            }
-        };
+    private static Object handleConstant(List<ConsumedRule> rules) {
+        Token token = rules.get(0).getToken();
+        Object content = token.getContent();
+        if (content instanceof Integer)
+            return new Variable(VariableType.INT, token.getContent());
+        else if (content instanceof String)
+            return new Variable(VariableType.STRING, token.getContent());
+        else if (content instanceof Boolean)
+            return new Variable(VariableType.BOOL, token.getContent());
+        throw new UnsupportedOperationException();
     }
 
-    private static Rule rule(For when, Do something) {
-        return new Rule() {
-            @Override
-            public boolean matches(TokenQueue tokenQueue) {
-                return when.matches(tokenQueue);
-            }
+    private static Object forLoop(List<ConsumedRule> rules, Context context) {
+        String loopVariableName = rules.get(1).getToken().getString();
+        Integer start = (Integer) rules.get(3).getVariable(context).getValue();
+        Integer end = (Integer) rules.get(5).getVariable(context).getValue();
 
-            @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
-                return new ConsumedRule(when.consume(tokenQueue).getList(null), something);
-            }
+        Variable loopVariable = new Variable(loopVariableName, VariableType.INT, start);
+        context.updateVariable(loopVariable);
 
-            public String str() {
-                return when.str();
-            }
-        };
+        for (Integer i = start; i <= end; i++) {
+            context.pushFrame();
+
+            rules.get(7).execute(context);
+
+            context.popFrame();
+            loopVariable = new Variable(loopVariableName, VariableType.INT, i + 1);
+            context.updateVariable(loopVariable);
+        }
+
+        return null;
+    }
+
+    private static Object assertExpression(List<ConsumedRule> rules, Context context) {
+        Boolean value = (Boolean) rules.get(2).getVariable(context).getValue();
+        assert value;
+        return null;
+    }
+
+    private static Object readVariable(List<ConsumedRule> rules, Context context) {
+        String name = rules.get(1).getToken().getString();
+        String input = context.readLine();
+        Variable variable;
+
+        /* Why, MiniPL ;__;
+        * read :: () -> Int
+        * read :: () -> String
+        */
+        try {
+            Integer value = Integer.parseInt(input);
+            variable = new Variable(name, VariableType.INT, value);
+        } catch (NumberFormatException ignored) {
+            variable = new Variable(name, VariableType.STRING, input);
+        }
+
+        context.updateVariable(variable);
+        return null;
+    }
+
+    private static Object printExpression(List<ConsumedRule> rules, Context context) {
+        Variable output = rules.get(1).getVariable(context);
+        context.print(output.getValue());
+        return null;
+    }
+
+    private static Object updateVariable(List<ConsumedRule> rules, Context context) {
+        String name = rules.get(0).getToken().getString();
+        Variable variable = context.getVariable(name);
+        Variable newValue = rules.get(2).getVariable(context);
+        context.updateVariable(new Variable(name, variable.getType(), newValue.getValue()));
+        return null;
+    }
+
+    private static Object createVariable(List<ConsumedRule> rules, Context context) {
+        String name = rules.get(1).getToken().getString();
+        VariableType type = rules.get(3).getToken().getVariableType();
+        List<ConsumedRule> value = rules.get(4).getList();
+        if (!value.isEmpty()) {
+            Variable variable = value.get(1).getVariable(context);
+            if (!variable.getType().equals(type))
+                throw new TypeException(type, variable.getType());
+            variable.setName(name);
+            context.addVariable(variable);
+        } else {
+            context.addVariable(new Variable(name, type));
+        }
+        return null;
+    }
+
+    private static Object handleOperation(List<ConsumedRule> rules, Context context) {
+        Variable left = rules.get(0).getVariable(context);
+        List<ConsumedRule> b = rules.get(1).getList();
+        if (!b.isEmpty()) {
+            Token operator = b.get(0).getToken();
+            Variable right = b.get(1).getVariable(context);
+            return handleOperation(context, left, operator, right);
+        }
+        return left;
     }
 
     private static Variable handleOperation(Context context, Variable left, Token operator, Variable right) {
@@ -264,10 +242,9 @@ public class Builder {
                         return new Variable(VariableType.BOOL, leftValue < rightValue);
                     case EQUALS:
                         return new Variable(VariableType.BOOL, leftValue == rightValue);
-                    default:
-                        throw new OperationNotSupportedException(left.getType(), operator);
                 }
             }
+            break;
             case STRING: {
                 String leftValue = (String) left.getValue();
                 String rightValue = (String) right.getValue();
@@ -276,10 +253,9 @@ public class Builder {
                         return new Variable(VariableType.STRING, leftValue + rightValue);
                     case EQUALS:
                         return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
-                    default:
-                        throw new OperationNotSupportedException(left.getType(), operator);
                 }
             }
+            break;
             case BOOL: {
                 Boolean leftValue = (Boolean) left.getValue();
                 Boolean rightValue = (Boolean) right.getValue();
@@ -288,40 +264,9 @@ public class Builder {
                         return new Variable(VariableType.BOOL, leftValue && rightValue);
                     case EQUALS:
                         return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
-                    default:
-                        throw new OperationNotSupportedException(left.getType(), operator);
                 }
             }
-            default:
-                throw new OperationNotSupportedException(left.getType(), operator);
         }
+        throw new OperationNotSupportedException(left.getType(), operator);
     }
-
-    private static Rule var = new Terminal(TokenValue.VAR);
-    private static Rule varIdent = new Terminal(TokenValue.IDENTIFIER);
-    private static Rule colon = new Terminal(TokenValue.COLON);
-    private static Rule type = new Terminal(TokenValue.TYPE);
-    private static Rule assign = new Terminal(TokenValue.ASSIGN);
-    private static Rule not = new Terminal(TokenValue.NOT);
-    private static Rule intvar = new Terminal(TokenValue.INTVAR);
-    private static Rule stringvar = new Terminal(TokenValue.STRINGVAR);
-    private static Rule boolvar = new Terminal(TokenValue.BOOLVAR);
-    private static Rule openbrace = new Terminal(TokenValue.OPEN_BRACE);
-    private static Rule closebrace = new Terminal(TokenValue.CLOSE_BRACE);
-    private static Rule plus = new Terminal(TokenValue.PLUS);
-    private static Rule minus = new Terminal(TokenValue.MINUS);
-    private static Rule times = new Terminal(TokenValue.TIMES);
-    private static Rule divide = new Terminal(TokenValue.DIVIDE);
-    private static Rule lessthan = new Terminal(TokenValue.LESSTHAN);
-    private static Rule equals = new Terminal(TokenValue.EQUALS);
-    private static Rule print = new Terminal(TokenValue.PRINT);
-    private static Rule semicolon = new Terminal(TokenValue.SEMICOLON);
-    private static Rule eos = new Terminal(TokenValue.EOS);
-    private static Rule read = new Terminal(TokenValue.READ);
-    private static Rule Assert = new Terminal(TokenValue.ASSERT);
-    private static Rule For = new Terminal(TokenValue.FOR);
-    private static Rule in = new Terminal(TokenValue.IN);
-    private static Rule range = new Terminal(TokenValue.RANGE);
-    private static Rule Do = new Terminal(TokenValue.DO);
-    private static Rule end = new Terminal(TokenValue.END);
 }
