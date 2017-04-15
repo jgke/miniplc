@@ -48,4 +48,5 @@ public class Terminal implements Rule {
     public static Rule Do = new Terminal(TokenValue.DO);
     public static Rule end = new Terminal(TokenValue.END);
     public static Rule eos = new Terminal(TokenValue.EOS);
+    public static Rule and = new Terminal(TokenValue.AND);
 }

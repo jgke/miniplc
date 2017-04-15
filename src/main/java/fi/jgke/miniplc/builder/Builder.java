@@ -88,7 +88,7 @@ public class Builder {
     }
 
     public static Rule operator() {
-        return any(plus, minus, times, divide, lessthan, equals);
+        return any(plus, minus, times, divide, lessthan, equals, and);
     }
 
     public static Rule operand() {

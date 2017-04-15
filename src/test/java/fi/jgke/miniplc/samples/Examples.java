@@ -15,8 +15,9 @@
  */
 package fi.jgke.miniplc.samples;
 
+import fi.jgke.miniplc.builder.RuleNotMatchedException;
+import fi.jgke.miniplc.exception.*;
 import fi.jgke.miniplc.exception.RuntimeException;
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.interpreter.Executor;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import org.junit.Before;
@@ -24,6 +25,8 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.lang.reflect.Type;
 
 import static org.mockito.Mockito.*;
 
@@ -99,5 +102,63 @@ public class Examples {
         inOrder.verify(inputOutput).print("Give a number");
         inOrder.verify(inputOutput).readLine();
         inOrder.verify(inputOutput).print(120);
+    }
+
+    @Test(expected = AssertionFailureException.class)
+    public void assertion() {
+        new Executor("assert(false);").execute(inputOutput);
+    }
+
+    @Test(expected = EndOfInputException.class)
+    public void endOfInput() {
+        new Executor(".").execute(inputOutput);
+    }
+
+    @Test(expected = IntegerParseError.class)
+    public void parseError() {
+        String sample = "var n : int; read n;";
+        when(inputOutput.readLine()).thenReturn("foo");
+        new Executor(sample).execute(inputOutput);
+    }
+
+    @Test(expected = OperationNotSupportedException.class)
+    public void invalidOperation() {
+        new Executor("var a : int := (5 & 5);").execute(inputOutput);
+    }
+
+    @Test(expected = TypeException.class)
+    public void typeError() {
+        new Executor("var a : int := true;").execute(inputOutput);
+    }
+
+    @Test(expected = UndefinedVariableException.class)
+    public void undefinedVariable() {
+        new Executor("a := 1;").execute(inputOutput);
+    }
+
+    @Test(expected = UnexpectedCharacterException.class)
+    public void unexpectedCharacter() {
+        new Executor(".1").execute(inputOutput);
+    }
+
+    @Test(expected = UnexpectedTokenException.class)
+    public void unexpectedToken() {
+        new Executor(";;").execute(inputOutput);
+    }
+
+    @Test(expected = UninitializedVariableException.class)
+    public void uninitializedVariable() {
+        new Executor("var a : int; print a;").execute(inputOutput);
+    }
+
+    @Test(expected = UnsupportedInputException.class)
+    public void unsupportedInput() {
+        String sample = "var n : bool; read n;";
+        new Executor(sample).execute(inputOutput);
+    }
+
+    @Test(expected = VariableAlreadyDefinedException.class)
+    public void duplicateVariables() {
+        new Executor("var a : int; var a : int;").execute(inputOutput);
     }
 }
