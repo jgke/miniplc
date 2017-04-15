@@ -19,7 +19,7 @@ import static fi.jgke.miniplc.builder.Or.or;
 public class Builder {
 
     public static void parseAndExecute(TokenQueue tokenQueue, Context context) {
-        statements().consume(tokenQueue).getValue(context, Object.class);
+        statements().consume(tokenQueue).execute(context);
         assert tokenQueue.isEmpty();
     }
 
@@ -29,8 +29,8 @@ public class Builder {
                         rule(
                                 when(statement(), semicolon, lazy(Builder::statements)),
                                 (rules, context) -> {
-                                    rules.get(0).getValue(context, Object.class);
-                                    rules.get(2).getValue(context, Object.class);
+                                    rules.get(0).execute(context);
+                                    rules.get(2).execute(context);
                                     return null;
                                 }
                         ), eos, empty()
@@ -43,11 +43,11 @@ public class Builder {
                         rule(
                                 when(var, varIdent, colon, type, Maybe.maybe(assign, expression())),
                                 (rules, context) -> {
-                                    String name = rules.get(1).getValue(context, Token.class).getString();
-                                    VariableType type = rules.get(3).getValue(context, Token.class).getVariableType();
-                                    List<ConsumedRule> value = rules.get(4).getValue(context, List.class);
+                                    String name = rules.get(1).getToken().getString();
+                                    VariableType type = rules.get(3).getToken().getVariableType();
+                                    List<ConsumedRule> value = rules.get(4).getList(context);
                                     if (!value.isEmpty()) {
-                                        Variable variable = value.get(1).getValue(context, Variable.class);
+                                        Variable variable = value.get(1).getVariable(context);
                                         if (!variable.getType().equals(type))
                                             throw new TypeException(type, variable.getType());
                                         variable.setName(name);
@@ -61,9 +61,9 @@ public class Builder {
                         rule(
                                 when(varIdent, assign, expression()),
                                 (rules, context) -> {
-                                    String name = rules.get(0).getValue(context, Token.class).getString();
+                                    String name = rules.get(0).getToken().getString();
                                     Variable variable = context.getVariable(name);
-                                    Variable newValue = rules.get(2).getValue(context, Variable.class);
+                                    Variable newValue = rules.get(2).getVariable(context);
                                     context.updateVariable(new Variable(name, variable.getType(), newValue.getValue()));
                                     return null;
                                 }
@@ -71,7 +71,7 @@ public class Builder {
                         rule(
                                 when(print, expression()),
                                 (rules, context) -> {
-                                    Variable output = rules.get(1).getValue(context, Variable.class);
+                                    Variable output = rules.get(1).getVariable(context);
                                     context.print(output.getValue());
                                     return null;
                                 }
@@ -79,7 +79,7 @@ public class Builder {
                         rule(
                                 when(read, varIdent),
                                 (rules, context) -> {
-                                    String name = rules.get(1).getValue(Token.class).getString();
+                                    String name = rules.get(1).getToken().getString();
                                     String input = context.readLine();
                                     Variable variable;
 
@@ -101,7 +101,7 @@ public class Builder {
                         rule(
                                 when(Assert, openbrace, expression(), closebrace),
                                 (rules, context) -> {
-                                    Boolean value = (Boolean)rules.get(2).getValue(context, Variable.class).getValue();
+                                    Boolean value = (Boolean)rules.get(2).getVariable(context).getValue();
                                     assert value;
                                     return null;
                                 }
@@ -109,9 +109,9 @@ public class Builder {
                         rule(
                                 when(For, varIdent, in, expression(), range, expression(), Do, lazy(() -> statements()), end, For),
                                 (rules, context) -> {
-                                    String loopVariableName = rules.get(1).getValue(Token.class).getString();
-                                    Integer start = (Integer)rules.get(3).getValue(context, Variable.class).getValue();
-                                    Integer end = (Integer)rules.get(5).getValue(context, Variable.class).getValue();
+                                    String loopVariableName = rules.get(1).getToken().getString();
+                                    Integer start = (Integer)rules.get(3).getVariable(context).getValue();
+                                    Integer end = (Integer)rules.get(5).getVariable(context).getValue();
 
                                     Variable loopVariable = new Variable(loopVariableName, VariableType.INT, start);
                                     context.updateVariable(loopVariable);
@@ -119,7 +119,7 @@ public class Builder {
                                     for (Integer i = start; i <= end; i++) {
                                         context.pushFrame();
 
-                                        rules.get(7).getValue(context, Object.class);
+                                        rules.get(7).execute(context);
 
                                         context.popFrame();
                                         loopVariable = new Variable(loopVariableName, VariableType.INT, i+1);
@@ -139,18 +139,18 @@ public class Builder {
                 rule(
                         when(not, operand()),
                         (rules, context) -> {
-                            Boolean value = (Boolean) rules.get(1).getValue(context, Variable.class).getValue();
+                            Boolean value = (Boolean) rules.get(1).getVariable(context).getValue();
                             return new Variable(VariableType.BOOL, !value);
                         }
                 ),
                 rule(
                         when(operand(), Maybe.maybe(operator(), operand())),
                         (rules, context) -> {
-                            Variable left = rules.get(0).getValue(context, Variable.class);
-                            List<ConsumedRule> b = rules.get(1).getValue(context, List.class);
+                            Variable left = rules.get(0).getVariable(context);
+                            List<ConsumedRule> b = rules.get(1).getList(context);
                             if (!b.isEmpty()) {
-                                Token operator = b.get(0).getValue(context, Token.class);
-                                Variable right = b.get(1).getValue(context, Variable.class);
+                                Token operator = b.get(0).getToken();
+                                Variable right = b.get(1).getVariable(context);
                                 return handleOperation(context, left, operator, right);
                             }
                             return left;
@@ -168,7 +168,7 @@ public class Builder {
                 rule(
                         when(or(intvar, stringvar, boolvar)),
                         (rules, context) -> {
-                            Token token = rules.get(0).getValue(Token.class);
+                            Token token = rules.get(0).getToken();
                             Object content = token.getContent();
                             if (content instanceof Integer)
                                 return new Variable(VariableType.INT, token.getContent());
@@ -180,10 +180,10 @@ public class Builder {
                         }),
                 rule(
                         when(varIdent),
-                        (rules, context) -> context.getVariable(rules.get(0).getValue(Token.class).getString())),
+                        (rules, context) -> context.getVariable(rules.get(0).getToken().getString())),
                 rule(
                         when(openbrace, lazy(Builder::expression), closebrace),
-                        (rules, context) -> rules.get(1).getValue(context, Object.class)
+                        (rules, context) -> rules.get(1).getVariable(context)
                 )
 
         );
@@ -216,7 +216,7 @@ public class Builder {
 
             @Override
             public ConsumedRule consume(TokenQueue tokenQueue) {
-                return new ConsumedRule(when.consume(tokenQueue).getValue(List.class), something);
+                return new ConsumedRule(when.consume(tokenQueue).getList(null), something);
             }
 
             public String str() {
@@ -247,69 +247,54 @@ public class Builder {
             throw new OperationNotSupportedException(left.getType(), operator);
         }
 
-        Variable result;
         switch (left.getType()) {
             case INT: {
-                Integer lval = (Integer) left.getValue();
-                Integer rval = (Integer) right.getValue();
+                Integer leftValue = (Integer) left.getValue();
+                Integer rightValue = (Integer) right.getValue();
                 switch (op) {
                     case PLUS:
-                        return new Variable(VariableType.INT, lval + rval);
+                        return new Variable(VariableType.INT, leftValue + rightValue);
                     case MINUS:
-                        result = new Variable(VariableType.INT, lval - rval);
-                        break;
+                        return new Variable(VariableType.INT, leftValue - rightValue);
                     case TIMES:
-                        result = new Variable(VariableType.INT, lval * rval);
-                        break;
+                        return new Variable(VariableType.INT, leftValue * rightValue);
                     case DIVIDE:
-                        result = new Variable(VariableType.INT, lval / rval);
-                        break;
+                        return new Variable(VariableType.INT, leftValue / rightValue);
                     case LESSTHAN:
-                        result = new Variable(VariableType.BOOL, lval < rval);
-                        break;
+                        return new Variable(VariableType.BOOL, leftValue < rightValue);
                     case EQUALS:
-                        result = new Variable(VariableType.BOOL, lval == rval);
-                        break;
+                        return new Variable(VariableType.BOOL, leftValue == rightValue);
                     default:
                         throw new OperationNotSupportedException(left.getType(), operator);
                 }
-                break;
             }
             case STRING: {
-                String lval = (String) left.getValue();
-                String rval = (String) right.getValue();
+                String leftValue = (String) left.getValue();
+                String rightValue = (String) right.getValue();
                 switch (op) {
                     case PLUS:
-                        result = new Variable(VariableType.STRING, lval + rval);
-                        break;
+                        return new Variable(VariableType.STRING, leftValue + rightValue);
                     case EQUALS:
-                        result = new Variable(VariableType.BOOL, lval.equals(rval));
-                        break;
+                        return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
                     default:
                         throw new OperationNotSupportedException(left.getType(), operator);
                 }
-                break;
             }
             case BOOL: {
-                Boolean lval = (Boolean) left.getValue();
-                Boolean rval = (Boolean) right.getValue();
+                Boolean leftValue = (Boolean) left.getValue();
+                Boolean rightValue = (Boolean) right.getValue();
                 switch (op) {
                     case AND:
-                        result = new Variable(VariableType.BOOL, lval && rval);
-                        break;
+                        return new Variable(VariableType.BOOL, leftValue && rightValue);
                     case EQUALS:
-                        result = new Variable(VariableType.BOOL, lval.equals(rval));
-                        break;
+                        return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
                     default:
                         throw new OperationNotSupportedException(left.getType(), operator);
                 }
-                break;
             }
             default:
                 throw new OperationNotSupportedException(left.getType(), operator);
         }
-        result.getValue();
-        return result;
     }
 
     private static Rule var = new Terminal(TokenValue.VAR);

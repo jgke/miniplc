@@ -44,7 +44,7 @@ public class OperandTest {
             throws RuntimeException, UnexpectedCharacterException {
         ConsumedRule consume = Builder.operand().consume(TokenQueue.of(tokens));
 
-        Variable var = consume.getValue(context, Variable.class);
+        Variable var = consume.getVariable(context);
 
         assertEquals(var.getType(), variableType);
         assertEquals(var.getValue(), value);

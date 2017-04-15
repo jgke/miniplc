@@ -46,7 +46,7 @@ public class ExpressionTest {
         Context context = new Context(InputOutput.getInstance());
         ConsumedRule consume = Builder.expression().consume(TokenQueue.of(tokens));
 
-        Variable var = consume.getValue(context, Variable.class);
+        Variable var = consume.getVariable(context);
 
         assertEquals(var.getType(), variableType);
         assertEquals(var.getValue(), value);
