@@ -1,7 +1,6 @@
 package fi.jgke.miniplc.builder;
 
-import fi.jgke.miniplc.exception.OperationNotSupportedException;
-import fi.jgke.miniplc.exception.TypeException;
+import fi.jgke.miniplc.exception.*;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
@@ -33,7 +32,8 @@ public class Builder {
                                     rules.get(2).execute(context);
                                     return null;
                                 }
-                        ), empty()
+                        ),
+                        empty()
                 );
     }
 
@@ -64,8 +64,6 @@ public class Builder {
                                 all(For, varIdent, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
                                 Builder::forLoop
                         )
-
-
                 );
     }
 
@@ -74,7 +72,11 @@ public class Builder {
                 rule(
                         all(not, operand()),
                         (rules, context) -> {
-                            Boolean value = (Boolean) rules.get(1).getVariable(context).getValue();
+                            Variable variable = rules.get(1).getVariable(context);
+                            if (!variable.getType().equals(VariableType.BOOL)) {
+                                throw new OperationNotSupportedException(rules.get(0).getToken());
+                            }
+                            Boolean value = (Boolean) variable.getValue();
                             return new Variable(VariableType.BOOL, !value);
                         }
                 ),
@@ -96,7 +98,10 @@ public class Builder {
                         (rules, context) -> handleConstant(rules)),
                 rule(
                         all(varIdent),
-                        (rules, context) -> context.getVariable(rules.get(0).getToken().getString())),
+                        (rules, context) -> {
+                            Token token = rules.get(0).getToken();
+                            return context.getVariable(token.getString(), token.getLineNumber());
+                        }),
                 rule(
                         all(openbrace, lazy(Builder::expression), closebrace),
                         (rules, context) -> rules.get(1).getVariable(context)
@@ -117,11 +122,20 @@ public class Builder {
     }
 
     private static Object forLoop(List<ConsumedRule> rules, Context context) {
+        // Use 'in' and '..' as the line number sources
+        int startlinenumber = rules.get(2).getToken().getLineNumber();
+        int endlinenumber = rules.get(4).getToken().getLineNumber();
         String loopVariableName = rules.get(1).getToken().getString();
-        Integer start = (Integer) rules.get(3).getVariable(context).getValue();
-        Integer end = (Integer) rules.get(5).getVariable(context).getValue();
+        Variable startVariable = rules.get(3).getVariable(context);
+        Variable endVariable = rules.get(5).getVariable(context);
+        if (!startVariable.getType().equals(VariableType.INT))
+            throw new TypeException(startlinenumber, VariableType.INT, startVariable.getType());
+        if (!endVariable.getType().equals(VariableType.INT))
+            throw new TypeException(endlinenumber, VariableType.INT, endVariable.getType());
+        Integer start = (Integer) startVariable.getValue();
+        Integer end = (Integer) endVariable.getValue();
 
-        Variable loopVariable = new Variable(loopVariableName, VariableType.INT, start);
+        Variable loopVariable = new Variable(loopVariableName, endlinenumber, VariableType.INT, start);
         context.updateVariable(loopVariable);
 
         for (Integer i = start; i <= end; i++) {
@@ -130,7 +144,7 @@ public class Builder {
             rules.get(7).execute(context);
 
             context.popFrame();
-            loopVariable = new Variable(loopVariableName, VariableType.INT, i + 1);
+            loopVariable = new Variable(loopVariableName, endlinenumber, VariableType.INT, i + 1);
             context.updateVariable(loopVariable);
         }
 
@@ -138,25 +152,39 @@ public class Builder {
     }
 
     private static Object assertExpression(List<ConsumedRule> rules, Context context) {
-        Boolean value = (Boolean) rules.get(2).getVariable(context).getValue();
-        assert value;
+        int linenumber = rules.get(0).getToken().getLineNumber();
+        Variable variable = rules.get(2).getVariable(context);
+        if (!variable.getType().equals(VariableType.BOOL)) {
+            throw new TypeException(linenumber, VariableType.BOOL, variable.getType());
+        }
+        Boolean value = (Boolean) variable.getValue();
+        if (!value)
+            throw new AssertionFailureException(linenumber);
         return null;
     }
 
     private static Object readVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(1).getToken().getString();
-        String input = context.readLine();
-        Variable variable;
+        Variable variable = context.getVariable(name, linenumber);
 
         /* Why, MiniPL ;__;
         * read :: () -> Int
         * read :: () -> String
         */
-        try {
-            Integer value = Integer.parseInt(input);
-            variable = new Variable(name, VariableType.INT, value);
-        } catch (NumberFormatException ignored) {
-            variable = new Variable(name, VariableType.STRING, input);
+        if (variable.getType().equals(VariableType.INT)) {
+            String input = context.readLine();
+            try {
+                Integer value = Integer.parseInt(input);
+                variable = new Variable(name, linenumber, VariableType.INT, value);
+            } catch (NumberFormatException ignored) {
+                throw new IntegerParseError(linenumber);
+            }
+        } else if (variable.getType().equals(VariableType.STRING)) {
+            String input = context.readLine();
+            variable = new Variable(name, linenumber, VariableType.STRING, input);
+        } else {
+            throw new UnsupportedInputException(linenumber);
         }
 
         context.updateVariable(variable);
@@ -170,25 +198,27 @@ public class Builder {
     }
 
     private static Object updateVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(0).getToken().getString();
-        Variable variable = context.getVariable(name);
+        Variable variable = context.getVariable(name, linenumber);
         Variable newValue = rules.get(2).getVariable(context);
-        context.updateVariable(new Variable(name, variable.getType(), newValue.getValue()));
+        context.updateVariable(new Variable(name, variable.getLineNumber(), variable.getType(), newValue.getValue()));
         return null;
     }
 
     private static Object createVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(1).getToken().getString();
         VariableType type = rules.get(3).getToken().getVariableType();
         List<ConsumedRule> value = rules.get(4).getList();
         if (!value.isEmpty()) {
             Variable variable = value.get(1).getVariable(context);
             if (!variable.getType().equals(type))
-                throw new TypeException(type, variable.getType());
+                throw new TypeException(linenumber, type, variable.getType());
             variable.setName(name);
             context.addVariable(variable);
         } else {
-            context.addVariable(new Variable(name, type));
+            context.addVariable(new Variable(name, linenumber, type));
         }
         return null;
     }
@@ -208,7 +238,7 @@ public class Builder {
         TokenValue op = operator.getValue();
 
         if (!left.getType().equals(right.getType())) {
-            throw new TypeException(left.getType(), right.getType());
+            throw new TypeException(operator.getLineNumber(), left.getType(), right.getType());
         }
 
         /* Booleans only support AND and EQUALS */

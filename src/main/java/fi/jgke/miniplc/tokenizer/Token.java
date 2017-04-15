@@ -21,14 +21,22 @@ public class Token {
     private final TokenValue value;
     private final Object content;
 
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
+    private final int lineNumber;
+
     public Token(TokenValue value, Object content) {
         this.value = value;
         this.content = content;
+        this.lineNumber = TokenQueue.lineNumber;
     }
 
     public Token(TokenValue value) {
         this.value = value;
         this.content = null;
+        this.lineNumber = TokenQueue.lineNumber;
     }
 
     public TokenValue getValue() {

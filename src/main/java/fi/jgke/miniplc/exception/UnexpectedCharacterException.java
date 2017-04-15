@@ -15,8 +15,8 @@
  */
 package fi.jgke.miniplc.exception;
 
-public class UnexpectedCharacterException extends java.lang.RuntimeException {
-    public UnexpectedCharacterException(char c) {
-        super("Unexpected character: " + c);
+public class UnexpectedCharacterException extends RuntimeException {
+    public UnexpectedCharacterException(int linenumber, char c) {
+        super("Unexpected character near line " + linenumber + ": " + c);
     }
 }

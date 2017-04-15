@@ -21,10 +21,10 @@ import fi.jgke.miniplc.interpreter.VariableType;
 
 public class OperationNotSupportedException extends RuntimeException {
     public OperationNotSupportedException(VariableType type, Token operator) {
-        super("Unsupported operation: Cannot use " + operator + " with " + type);
+        super("Unsupported operation near line " + operator.getLineNumber() + ": Cannot use " + operator + " with " + type);
     }
 
-    public OperationNotSupportedException(TokenValue not) {
-        super("Cannot use " + not + " with two parameters");
+    public OperationNotSupportedException(Token not) {
+        super("Unsupported operation near line " + not.getLineNumber() + ": Cannot use " + not.getValue() + " with non-boolean");
     }
 }

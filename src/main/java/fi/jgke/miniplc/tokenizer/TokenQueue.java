@@ -15,9 +15,10 @@
  */
 package fi.jgke.miniplc.tokenizer;
 
+import fi.jgke.miniplc.exception.EndOfInputException;
 import fi.jgke.miniplc.interpreter.VariableType;
 import fi.jgke.miniplc.exception.UnexpectedCharacterException;
-import fi.jgke.miniplc.exception.UnexpectedTypeException;
+import fi.jgke.miniplc.exception.UnexpectedTokenException;
 
 import java.util.*;
 
@@ -27,6 +28,7 @@ public class TokenQueue {
     private final Map<Character, Character> escapeMap;
     private final Map<String, TokenValue> keywords;
     private final Map<TokenValue, Object> values;
+    public static int lineNumber = 1;
 
     public TokenQueue(String file) throws UnexpectedCharacterException {
         tokens = new ArrayDeque<>();
@@ -60,7 +62,7 @@ public class TokenQueue {
     public static TokenQueue of(Token... tokens) {
         TokenQueue tokenQueue = new TokenQueue("");
         tokenQueue.getExpectedToken(TokenValue.EOS);
-        for(Token t : tokens)
+        for (Token t : tokens)
             tokenQueue.add(t);
         return tokenQueue;
     }
@@ -80,6 +82,8 @@ public class TokenQueue {
     private Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
         Character beginning = input.remove();
         while (Character.isWhitespace(beginning)) {
+            if (beginning == '\n')
+                lineNumber++;
             if (input.isEmpty())
                 return new Token(TokenValue.EOS);
             beginning = input.remove();
@@ -114,11 +118,23 @@ public class TokenQueue {
                 if (!input.isEmpty() && input.peek() == '/') {
                     /* It's a comment, remove the rest of the line */
                     while (!input.isEmpty() && input.remove() != '\n') ;
+                    lineNumber++;
                     return readToken(input);
                 } else if (!input.isEmpty() && input.peek() == '*') {
                     input.remove();
+                    if(input.peek() == '\n') {
+                        lineNumber++;
+                    }
                     /* Multiline comment, remove until end of the multiline comment */
-                    while (!input.isEmpty() && input.remove() != '*' && input.peek() != '/');
+                    try {
+                        while (input.remove() != '*' && input.element() != '/') {
+                            if (input.peek() == '\n') {
+                                lineNumber++;
+                            }
+                        }
+                    } catch (NoSuchElementException e) {
+                        throw new EndOfInputException();
+                    }
 
                     /* Poll because input might be empty here, so readToken returns EOS */
                     input.poll();
@@ -136,11 +152,11 @@ public class TokenQueue {
 
             case '.':
                 if (input.isEmpty()) {
-                    throw new UnexpectedCharacterException('.');
+                    throw new EndOfInputException();
                 }
                 char c = input.remove();
                 if (c != '.') {
-                    throw new UnexpectedCharacterException(c);
+                    throw new UnexpectedCharacterException(lineNumber, c);
                 }
                 return new Token(TokenValue.RANGE);
         }
@@ -150,9 +166,11 @@ public class TokenQueue {
         if (beginning == '"') {
             while (true) {
                 if (input.isEmpty()) {
-                    throw new UnexpectedCharacterException('.');
+                    throw new EndOfInputException();
                 }
                 char c = input.remove();
+                if(c == '\n')
+                    lineNumber++;
                 if (c == '"')
                     return new Token(TokenValue.STRINGCONST, token);
                 if (c == '\\') {
@@ -166,7 +184,7 @@ public class TokenQueue {
         token += beginning;
 
         if (!isLetter(beginning) && !isNumber(beginning)) {
-            throw new UnexpectedCharacterException(beginning);
+            throw new UnexpectedCharacterException(lineNumber, beginning);
         }
 
         if (beginning >= '0' && beginning <= '9') {
@@ -175,7 +193,7 @@ public class TokenQueue {
                 if (isNumber(c))
                     token += c;
                 else if (isLetter(c))
-                    throw new UnexpectedCharacterException(c);
+                    throw new UnexpectedCharacterException(lineNumber, c);
                 else
                     return new Token(TokenValue.INTCONST, Integer.parseInt(token));
                 input.remove();
@@ -198,7 +216,7 @@ public class TokenQueue {
     }
 
     private Token getTokenFromWord(String token) {
-        if(token.equals("true")) {
+        if (token.equals("true")) {
             return new Token(TokenValue.BOOLCONST, true);
         } else if (token.equals("false")) {
             return new Token(TokenValue.BOOLCONST, false);
@@ -232,13 +250,13 @@ public class TokenQueue {
         tokens.add(token);
     }
 
-    public Token getExpectedToken(TokenValue... types) throws UnexpectedTypeException {
+    public Token getExpectedToken(TokenValue... types) throws UnexpectedTokenException {
         Token token = this.remove();
         for (TokenValue type : types) {
             if (token.getValue().equals(type))
                 return token;
         }
-        throw new UnexpectedTypeException(token.getValue(), types);
+        throw new UnexpectedTokenException(token, types);
     }
 
 

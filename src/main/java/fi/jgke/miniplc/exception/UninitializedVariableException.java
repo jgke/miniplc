@@ -19,6 +19,6 @@ import fi.jgke.miniplc.interpreter.Variable;
 
 public class UninitializedVariableException extends RuntimeException {
     public UninitializedVariableException(Variable variable) {
-        super("Uninitialized variable: " + variable.getName());
+        super("Uninitialized variable near line " + variable.getLineNumber() + ": " + variable.getName());
     }
 }

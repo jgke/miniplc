@@ -65,7 +65,7 @@ public class BaseRules {
                     if(rule.matches(tokenQueue))
                         return rule.consume(tokenQueue);
                 }
-                throw new RuleNotMatchedException();
+                throw new RuleNotMatchedException(tokenQueue.element().getLineNumber());
             }
         };
     }

@@ -37,7 +37,7 @@ public class Examples {
     }
 
     @Test
-    public void example1() throws UnexpectedCharacterException, RuntimeException {
+    public void example1() throws RuntimeException {
         String sample = "" +
                 "var X : int := 4 + (6 * 2);\n" +
                 "print X;";
@@ -51,7 +51,7 @@ public class Examples {
     }
 
     @Test
-    public void example2() throws UnexpectedCharacterException, RuntimeException {
+    public void example2() throws RuntimeException {
         String sample = "" +
                 "var nTimes : int := 0;\n" +
                 "print \"How many times?\"; \n" +
@@ -80,7 +80,7 @@ public class Examples {
     }
 
     @Test
-    public void example3() throws UnexpectedCharacterException, RuntimeException {
+    public void example3() throws RuntimeException {
         String sample = "print \"Give a number\"; \n" +
                 "     var n : int;\n" +
                 "     read n;\n" +
@@ -99,6 +99,5 @@ public class Examples {
         inOrder.verify(inputOutput).print("Give a number");
         inOrder.verify(inputOutput).readLine();
         inOrder.verify(inputOutput).print(120);
-
     }
 }

@@ -16,7 +16,7 @@
 package fi.jgke.miniplc.exception;
 
 public class UndefinedVariableException extends RuntimeException {
-    public UndefinedVariableException(String name) {
-        super("Undefined variable: " + name);
+    public UndefinedVariableException(int linenumber, String name) {
+        super("Undefined variable near line " + linenumber + ": " + name);
     }
 }

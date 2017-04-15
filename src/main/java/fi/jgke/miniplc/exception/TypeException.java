@@ -18,7 +18,7 @@ package fi.jgke.miniplc.exception;
 import fi.jgke.miniplc.interpreter.VariableType;
 
 public class TypeException extends RuntimeException {
-    public TypeException(VariableType expected, VariableType actual) {
-        super("Incompatible types: Expected " + expected.toString() + ", got " + actual.toString());
+    public TypeException(int linenumber, VariableType expected, VariableType actual) {
+        super("Incompatible types near line " + linenumber + ": Expected " + expected + ", got " + actual);
     }
 }

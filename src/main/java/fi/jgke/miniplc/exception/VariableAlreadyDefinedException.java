@@ -15,8 +15,11 @@
  */
 package fi.jgke.miniplc.exception;
 
+import fi.jgke.miniplc.interpreter.Variable;
+
 public class VariableAlreadyDefinedException extends RuntimeException {
-    public VariableAlreadyDefinedException(String name) {
-        super("Variable already defined: " + name);
+    public VariableAlreadyDefinedException(Variable variable, Variable existing) {
+        super("Variable " + variable.getName() + " already defined near line " + existing.getLineNumber() +
+                ", cannot redefine at line " + variable.getLineNumber());
     }
 }

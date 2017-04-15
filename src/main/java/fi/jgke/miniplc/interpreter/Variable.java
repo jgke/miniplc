@@ -21,6 +21,7 @@ public class Variable {
     private String name;
     private final VariableType type;
     private final Object value;
+    private final int lineNumber;
 
     private boolean typeMatches(VariableType type, Object value) {
         return value == null
@@ -33,26 +34,30 @@ public class Variable {
         this.type = type;
         this.value = null;
         this.name = null;
+        this.lineNumber = 0;
     }
 
     public Variable(VariableType type, Object value) {
         this.type = type;
         this.value = value;
+        this.lineNumber = 0;
         if (value == null || !typeMatches(type, value)) {
             throw new IllegalStateException();
         }
     }
 
-    public Variable(String name, VariableType type) {
+    public Variable(String name, int lineNumber, VariableType type) {
         this.name = name;
         this.type = type;
         this.value = null;
+        this.lineNumber = lineNumber;
     }
 
-    public Variable(String name, VariableType type, Object value) {
+    public Variable(String name, int lineNumber, VariableType type, Object value) {
         this.name = name;
         this.type = type;
         this.value = value;
+        this.lineNumber = lineNumber;
         if (value == null || !typeMatches(type, value)) {
             throw new IllegalStateException();
         }
@@ -89,5 +94,9 @@ public class Variable {
                 ", type=" + type +
                 ", value=" + value +
                 '}';
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
     }
 }

@@ -20,6 +20,6 @@ public class InputOutput {
     }
 
     public void print(Object output) {
-        System.out.print(output);
+        System.out.println(output);
     }
 }

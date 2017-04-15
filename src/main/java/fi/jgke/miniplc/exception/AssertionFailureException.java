@@ -16,7 +16,7 @@
 package fi.jgke.miniplc.exception;
 
 public class AssertionFailureException extends RuntimeException {
-    public AssertionFailureException() {
-        super("Assertion failed");
+    public AssertionFailureException(int lineNumber) {
+        super("Assertion failed on line " + lineNumber);
     }
 }

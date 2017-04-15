@@ -15,8 +15,8 @@
  */
 package fi.jgke.miniplc;
 
+import fi.jgke.miniplc.exception.*;
 import fi.jgke.miniplc.exception.RuntimeException;
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.interpreter.Executor;
 import fi.jgke.miniplc.interpreter.InputOutput;
 
@@ -39,9 +39,14 @@ public class Miniplc {
             System.exit(-1);
         }
 
-        String content = new String(Files.readAllBytes(Paths.get(args[0])));
-        Executor executor = new Executor(content);
-        executor.execute(InputOutput.getInstance());
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(args[0])));
+            Executor executor = new Executor(content);
+            executor.execute(InputOutput.getInstance());
+        } catch(RuntimeException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
 }

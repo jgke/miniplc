@@ -34,7 +34,7 @@ public class Context {
 
     public void addVariable(Variable variable) throws VariableAlreadyDefinedException {
         if (variables.get(variables.size() - 1).containsKey(variable.getName())) {
-            throw new VariableAlreadyDefinedException(variable.getName());
+            throw new VariableAlreadyDefinedException(variable, getVariable(variable.getName(), variable.getLineNumber()));
         }
         variables.get(variables.size() - 1).put(variable.getName(), variable);
     }
@@ -49,17 +49,17 @@ public class Context {
                 return;
             }
         }
-        throw new UndefinedVariableException(name);
+        throw new UndefinedVariableException(variable.getLineNumber(), name);
     }
 
-    public Variable getVariable(String name) throws UndefinedVariableException {
+    public Variable getVariable(String name, int linenumber) throws UndefinedVariableException {
         Map<String, Variable> map;
         for (int i = variables.size() - 1; i >= 0; i--) {
             map = variables.get(i);
             if (map.containsKey(name))
                 return map.get(name);
         }
-        throw new UndefinedVariableException(name);
+        throw new UndefinedVariableException(linenumber, name);
     }
 
     public void pushFrame() {

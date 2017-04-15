@@ -74,7 +74,7 @@ public class OperandTest {
     @Test
     public void parseIdentifier() throws UnexpectedCharacterException, RuntimeException {
         Context context = new Context(InputOutput.getInstance());
-        context.addVariable(new Variable("bar", VariableType.STRING, "foo"));
+        context.addVariable(new Variable("bar", 1, VariableType.STRING, "foo"));
         testWith(context, VariableType.STRING, "foo", new Token(TokenValue.IDENTIFIER, "bar"));
     }
 
@@ -84,7 +84,7 @@ public class OperandTest {
         Token middle = new Token(TokenValue.INTCONST, 5);
         Token right = new Token(TokenValue.CLOSE_BRACE);
         Context context = new Context(InputOutput.getInstance());
-        context.addVariable(new Variable("bar", VariableType.STRING, "foo"));
+        context.addVariable(new Variable("bar", 1, VariableType.STRING, "foo"));
         testWith(context, VariableType.INT, 5, left, middle, right);
     }
 
