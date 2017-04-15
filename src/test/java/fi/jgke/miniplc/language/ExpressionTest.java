@@ -21,6 +21,8 @@ import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
+import fi.jgke.miniplc.builder.Builder;
+import fi.jgke.miniplc.builder.ConsumedRule;
 import fi.jgke.miniplc.tokenizer.Token;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
@@ -42,10 +44,9 @@ public class ExpressionTest {
     private void testWith(VariableType variableType, Object value, Token... tokens)
             throws RuntimeException, UnexpectedCharacterException {
         Context context = new Context(InputOutput.getInstance());
-        Expression expression = new Expression();
-        expression.parse(with(tokens));
+        ConsumedRule consume = Builder.expression().consume(TokenQueue.of(tokens));
 
-        Variable var = expression.execute(context);
+        Variable var = consume.getValue(context, Variable.class);
 
         assertEquals(var.getType(), variableType);
         assertEquals(var.getValue(), value);

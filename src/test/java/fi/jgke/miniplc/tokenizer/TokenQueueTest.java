@@ -22,6 +22,7 @@ public class TokenQueueTest {
         tokens.put("!", TokenValue.NOT);
         tokens.put("<", TokenValue.LESSTHAN);
         tokens.put("=", TokenValue.EQUALS);
+        tokens.put(":=", TokenValue.ASSIGN);
         tokens.put("/", TokenValue.DIVIDE);
         tokens.put("/* foo */ +", TokenValue.PLUS);
         tokens.put("// foo bar\n-", TokenValue.MINUS);
@@ -37,14 +38,15 @@ public class TokenQueueTest {
         tokens.put("do", TokenValue.DO);
         tokens.put("read", TokenValue.READ);
         tokens.put("print", TokenValue.PRINT);
-        tokens.put("int", TokenValue.INT);
-        tokens.put("string", TokenValue.STRING);
-        tokens.put("bool", TokenValue.BOOL);
+        tokens.put("int", TokenValue.TYPE);
+        tokens.put("string", TokenValue.TYPE);
+        tokens.put("bool", TokenValue.TYPE);
         tokens.put("assert", TokenValue.ASSERT);
 
         for(String key : tokens.keySet()) {
             TokenQueue tokenQueue = new TokenQueue(key);
             assertEquals(tokens.get(key), tokenQueue.remove().getValue());
+            assertEquals(TokenValue.EOS, tokenQueue.remove().getValue());
             assertTrue(tokenQueue.isEmpty());
         }
     }

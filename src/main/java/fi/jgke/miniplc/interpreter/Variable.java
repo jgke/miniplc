@@ -84,6 +84,10 @@ public class Variable {
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return "Variable{" +
+                "name='" + name + '\'' +
+                ", type=" + type +
+                ", value=" + value +
+                '}';
     }
 }

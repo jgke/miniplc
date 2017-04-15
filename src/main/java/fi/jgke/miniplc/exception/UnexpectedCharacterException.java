@@ -15,7 +15,7 @@
  */
 package fi.jgke.miniplc.exception;
 
-public class UnexpectedCharacterException extends Throwable {
+public class UnexpectedCharacterException extends java.lang.RuntimeException {
     public UnexpectedCharacterException(char c) {
         super("Unexpected character: " + c);
     }

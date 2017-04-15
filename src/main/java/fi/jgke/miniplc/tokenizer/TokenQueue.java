@@ -58,6 +58,14 @@ public class TokenQueue {
         this.tokenize(file);
     }
 
+    public static TokenQueue of(Token... tokens) {
+        TokenQueue tokenQueue = new TokenQueue("");
+        tokenQueue.getExpectedToken(TokenValue.EOS);
+        for(Token t : tokens)
+            tokenQueue.add(t);
+        return tokenQueue;
+    }
+
     private boolean isNumber(Character c) {
         return c != null && c >= '0' && c <= '9';
     }
@@ -195,6 +203,12 @@ public class TokenQueue {
             return new Token(TokenValue.BOOLVAR, true);
         } else if (token.equals("false")) {
             return new Token(TokenValue.BOOLVAR, false);
+        } else if (token.equals("int")) {
+            return new Token(TokenValue.TYPE, VariableType.INT);
+        } else if (token.equals("string")) {
+            return new Token(TokenValue.TYPE, VariableType.STRING);
+        } else if (token.equals("bool")) {
+            return new Token(TokenValue.TYPE, VariableType.BOOL);
         }
         TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
         Object tokenValue = values.getOrDefault(type, token);
@@ -211,6 +225,7 @@ public class TokenQueue {
                 break;
             this.add(token);
         }
+        this.add(new Token(TokenValue.EOS));
     }
 
 

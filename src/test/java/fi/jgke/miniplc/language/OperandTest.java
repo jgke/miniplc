@@ -21,6 +21,8 @@ import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
+import fi.jgke.miniplc.builder.Builder;
+import fi.jgke.miniplc.builder.ConsumedRule;
 import fi.jgke.miniplc.tokenizer.Token;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
@@ -40,10 +42,9 @@ public class OperandTest {
 
     private void testWith(Context context, VariableType variableType, Object value, Token... tokens)
             throws RuntimeException, UnexpectedCharacterException {
-        Operand operand = new Operand();
-        operand.parse(with(tokens));
+        ConsumedRule consume = Builder.operand().consume(TokenQueue.of(tokens));
 
-        Variable var = operand.execute(context);
+        Variable var = consume.getValue(context, Variable.class);
 
         assertEquals(var.getType(), variableType);
         assertEquals(var.getValue(), value);

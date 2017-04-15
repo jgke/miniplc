@@ -17,8 +17,8 @@ package fi.jgke.miniplc.interpreter;
 
 import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.exception.RuntimeException;
+import fi.jgke.miniplc.builder.Builder;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
-import fi.jgke.miniplc.language.Program;
 
 public class Executor {
 
@@ -30,8 +30,6 @@ public class Executor {
 
     public void execute(InputOutput io) throws UnexpectedCharacterException, RuntimeException {
         TokenQueue queue = new TokenQueue(script);
-        Program program = new Program();
-        program.parse(queue);
-        program.execute(new Context(io));
+        Builder.parseAndExecute(queue, new Context(io));
     }
 }
