@@ -8,10 +8,10 @@ public enum TokenValue {
     OPEN_BRACE, CLOSE_BRACE, SEMICOLON, COLON, ASSIGN, RANGE,
 
     /* + - * / < = & ! */
-    PLUS, MINUS, TIMES, DIVIDE, LESSTHAN, EQUALS, AND, NOT,
+    PLUS, MINUS, TIMES, DIVIDE, LESS_THAN, EQUALS, AND, NOT,
 
     /* "..." 123 */
-    STRINGCONST, INTCONST, BOOLCONST,
+    STRING_CONST, INT_CONST, BOOL_CONST,
 
     /* any type identifier */
     TYPE,
@@ -20,16 +20,5 @@ public enum TokenValue {
     IDENTIFIER,
 
     /* end of stream */
-    EOS;
-
-    public boolean isOperator() {
-        TokenValue[] values = {TokenValue.PLUS, TokenValue.MINUS, TokenValue.TIMES, TokenValue.DIVIDE,
-                TokenValue.LESSTHAN, TokenValue.EQUALS, TokenValue.AND};
-        for (TokenValue value : values) {
-            if (this.equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    EOS
 }

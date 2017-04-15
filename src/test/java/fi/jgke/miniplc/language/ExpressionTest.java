@@ -16,7 +16,6 @@
 package fi.jgke.miniplc.language;
 
 import fi.jgke.miniplc.exception.RuntimeException;
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
@@ -33,16 +32,8 @@ import static org.junit.Assert.*;
 public class ExpressionTest {
 
 
-    private TokenQueue with(Token... tokens) throws UnexpectedCharacterException {
-        TokenQueue tokenQueue = new TokenQueue("");
-        for (Object token : tokens) {
-            tokenQueue.add((Token) token);
-        }
-        return tokenQueue;
-    }
-
     private void testWith(VariableType variableType, Object value, Token... tokens)
-            throws RuntimeException, UnexpectedCharacterException {
+            throws RuntimeException {
         Context context = new Context(InputOutput.getInstance());
         ConsumedRule consume = Builder.expression().consume(TokenQueue.of(tokens));
 
@@ -53,14 +44,14 @@ public class ExpressionTest {
     }
 
     @Test
-    public void parseNot() throws UnexpectedCharacterException, RuntimeException {
+    public void parseNot() throws RuntimeException {
         Token op = new Token(TokenValue.NOT);
-        Token arg = new Token(TokenValue.BOOLCONST, true);
+        Token arg = new Token(TokenValue.BOOL_CONST, true);
         testWith(VariableType.BOOL, false, op, arg);
     }
 
     private void test(Object left, TokenValue leftType, TokenValue op, Object right, TokenValue rightType,
-                      Object expected, VariableType expectedType) throws UnexpectedCharacterException, RuntimeException {
+                      Object expected, VariableType expectedType) throws RuntimeException {
         Token leftToken = new Token(leftType, left);
         Token operator = new Token(op);
         Token rightToken = new Token(rightType, right);
@@ -68,57 +59,57 @@ public class ExpressionTest {
     }
 
     private void testInteger(int left, TokenValue op, int right, int expected)
-            throws UnexpectedCharacterException, RuntimeException {
-        test(left, TokenValue.INTCONST, op, right, TokenValue.INTCONST, expected, VariableType.INT);
+            throws RuntimeException {
+        test(left, TokenValue.INT_CONST, op, right, TokenValue.INT_CONST, expected, VariableType.INT);
     }
 
     @Test
-    public void parseIntegerPlus() throws UnexpectedCharacterException, RuntimeException {
+    public void parseIntegerPlus() throws RuntimeException {
         testInteger(5, TokenValue.PLUS, 3, 8);
     }
 
     @Test
-    public void parseIntegerMinus() throws UnexpectedCharacterException, RuntimeException {
-        testInteger(5, TokenValue.MINUS, 3, 2);
+    public void parseIntegerMinus() throws RuntimeException {
+        testInteger(3, TokenValue.MINUS, 2, 1);
     }
 
     @Test
-    public void parseIntegerTimes() throws UnexpectedCharacterException, RuntimeException {
-        testInteger(5, TokenValue.TIMES, 3, 15);
+    public void parseIntegerTimes() throws RuntimeException {
+        testInteger(5, TokenValue.TIMES, 4, 20);
     }
 
     @Test
-    public void parseIntegerDivide() throws UnexpectedCharacterException, RuntimeException {
-        testInteger(5, TokenValue.DIVIDE, 3, 1);
+    public void parseIntegerDivide() throws RuntimeException {
+        testInteger(7, TokenValue.DIVIDE, 3, 2);
     }
 
     @Test
-    public void parseIntegerLessThan() throws UnexpectedCharacterException, RuntimeException {
-        test(5, TokenValue.INTCONST, TokenValue.LESSTHAN, 3, TokenValue.INTCONST, false, VariableType.BOOL);
+    public void parseIntegerLessThan() throws RuntimeException {
+        test(5, TokenValue.INT_CONST, TokenValue.LESS_THAN, 3, TokenValue.INT_CONST, false, VariableType.BOOL);
     }
 
     @Test
-    public void parseIntegerEquals() throws UnexpectedCharacterException, RuntimeException {
-        test(5, TokenValue.INTCONST, TokenValue.EQUALS, 3, TokenValue.INTCONST, false, VariableType.BOOL);
+    public void parseIntegerEquals() throws RuntimeException {
+        test(5, TokenValue.INT_CONST, TokenValue.EQUALS, 3, TokenValue.INT_CONST, false, VariableType.BOOL);
     }
 
     @Test
-    public void parseStringPlus() throws UnexpectedCharacterException, RuntimeException {
-        test("foo", TokenValue.STRINGCONST, TokenValue.PLUS, "bar", TokenValue.STRINGCONST, "foobar", VariableType.STRING);
+    public void parseStringPlus() throws RuntimeException {
+        test("foo", TokenValue.STRING_CONST, TokenValue.PLUS, "bar", TokenValue.STRING_CONST, "foobar", VariableType.STRING);
     }
 
     @Test
-    public void parseStringEquals() throws UnexpectedCharacterException, RuntimeException {
-        test("foo", TokenValue.STRINGCONST, TokenValue.EQUALS, "bar", TokenValue.STRINGCONST, false, VariableType.BOOL);
+    public void parseStringEquals() throws RuntimeException {
+        test("foo", TokenValue.STRING_CONST, TokenValue.EQUALS, "bar", TokenValue.STRING_CONST, false, VariableType.BOOL);
     }
 
     @Test
-    public void parseBoolAnd() throws UnexpectedCharacterException, RuntimeException {
-        test(false, TokenValue.BOOLCONST, TokenValue.AND, true, TokenValue.BOOLCONST, false, VariableType.BOOL);
+    public void parseBoolAnd() throws RuntimeException {
+        test(false, TokenValue.BOOL_CONST, TokenValue.AND, true, TokenValue.BOOL_CONST, false, VariableType.BOOL);
     }
 
     @Test
-    public void parseBoolEquals() throws UnexpectedCharacterException, RuntimeException {
-        test(false, TokenValue.BOOLCONST, TokenValue.EQUALS, true, TokenValue.BOOLCONST, false, VariableType.BOOL);
+    public void parseBoolEquals() throws RuntimeException {
+        test(false, TokenValue.BOOL_CONST, TokenValue.EQUALS, true, TokenValue.BOOL_CONST, false, VariableType.BOOL);
     }
 }

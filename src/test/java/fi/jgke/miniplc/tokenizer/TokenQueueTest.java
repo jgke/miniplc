@@ -1,5 +1,6 @@
 package fi.jgke.miniplc.tokenizer;
 
+import fi.jgke.miniplc.exception.EndOfInputException;
 import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import org.junit.Test;
 
@@ -20,17 +21,19 @@ public class TokenQueueTest {
         tokens.put("*", TokenValue.TIMES);
         tokens.put("&", TokenValue.AND);
         tokens.put("!", TokenValue.NOT);
-        tokens.put("<", TokenValue.LESSTHAN);
+        tokens.put("<", TokenValue.LESS_THAN);
         tokens.put("=", TokenValue.EQUALS);
         tokens.put(":=", TokenValue.ASSIGN);
         tokens.put("/", TokenValue.DIVIDE);
         tokens.put("/* foo */ +", TokenValue.PLUS);
+        tokens.put("/*\nfoo\n*/ +", TokenValue.PLUS);
+        tokens.put("/*\nfoo\n*\n*/ +", TokenValue.PLUS);
         tokens.put("// foo bar\n-", TokenValue.MINUS);
         tokens.put("foo", TokenValue.IDENTIFIER);
-        tokens.put("100", TokenValue.INTCONST);
-        tokens.put("\"foo\nbar\"", TokenValue.STRINGCONST);
-        tokens.put("true", TokenValue.BOOLCONST);
-        tokens.put("false", TokenValue.BOOLCONST);
+        tokens.put("100", TokenValue.INT_CONST);
+        tokens.put("\"foo\nbar\"", TokenValue.STRING_CONST);
+        tokens.put("true", TokenValue.BOOL_CONST);
+        tokens.put("false", TokenValue.BOOL_CONST);
         tokens.put("var", TokenValue.VAR);
         tokens.put("for", TokenValue.FOR);
         tokens.put("end", TokenValue.END);
@@ -49,5 +52,25 @@ public class TokenQueueTest {
             assertEquals(TokenValue.EOS, tokenQueue.remove().getValue());
             assertTrue(tokenQueue.isEmpty());
         }
+    }
+
+    @Test(expected = EndOfInputException.class)
+    public void testEndOfComment() {
+        new TokenQueue("/*");
+    }
+
+    @Test(expected = EndOfInputException.class)
+    public void testEndOfString() {
+        new TokenQueue("\"");
+    }
+
+    @Test(expected = UnexpectedCharacterException.class)
+    public void testUnexpectedUnderscore() {
+        new TokenQueue("_");
+    }
+
+    @Test(expected = UnexpectedCharacterException.class)
+    public void testBadNumber() {
+        new TokenQueue("5a");
     }
 }

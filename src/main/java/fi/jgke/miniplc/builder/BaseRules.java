@@ -28,6 +28,7 @@ public class BaseRules {
             public boolean matches(TokenQueue queue) {
                 return rules[0].matches(queue);
             }
+
             public SimpleConsumedRule consume(TokenQueue tokenQueue) {
                 List<ConsumedRule> tokens = Arrays.stream(rules)
                         .map(rule -> rule.consume(tokenQueue))
@@ -45,8 +46,10 @@ public class BaseRules {
             }
 
             public ConsumedRule consume(TokenQueue queue) {
-                if(rules[0].matches(queue))
-                    return new SimpleConsumedRule(Arrays.stream(rules).map(r -> r.consume(queue)).collect(Collectors.toList()));
+                if (rules[0].matches(queue))
+                    return new SimpleConsumedRule(Arrays.stream(rules)
+                            .map(r -> r.consume(queue))
+                            .collect(Collectors.toList()));
                 return new SimpleConsumedRule(new ArrayList<>());
             }
         };
@@ -61,8 +64,8 @@ public class BaseRules {
 
             @Override
             public ConsumedRule consume(TokenQueue tokenQueue) {
-                for(Rule rule : rules) {
-                    if(rule.matches(tokenQueue))
+                for (Rule rule : rules) {
+                    if (rule.matches(tokenQueue))
                         return rule.consume(tokenQueue);
                 }
                 throw new RuleNotMatchedException(tokenQueue.element().getLineNumber());

@@ -7,8 +7,8 @@ import fi.jgke.miniplc.tokenizer.Token;
 import java.util.List;
 
 public class ConsumedRule {
-    private List<ConsumedRule> rules;
-    private Do getter;
+    private final List<ConsumedRule> rules;
+    private final Do getter;
 
     ConsumedRule(List<ConsumedRule> rules, Do getter) {
         this.rules = rules;
@@ -23,9 +23,8 @@ public class ConsumedRule {
     /**
      * Execute purely for side effects.
      */
-    public Object execute(Context context) {
+    public void execute(Context context) {
         getValue(context, Object.class);
-        return null;
     }
 
     @SuppressWarnings("unchecked")

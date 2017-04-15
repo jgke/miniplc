@@ -15,7 +15,6 @@
  */
 package fi.jgke.miniplc.samples;
 
-import fi.jgke.miniplc.builder.RuleNotMatchedException;
 import fi.jgke.miniplc.exception.*;
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.interpreter.Executor;
@@ -26,12 +25,11 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.lang.reflect.Type;
-
 import static org.mockito.Mockito.*;
 
 public class Examples {
     @Mock
+    private
     InputOutput inputOutput;
 
     @Before
@@ -102,6 +100,16 @@ public class Examples {
         inOrder.verify(inputOutput).print("Give a number");
         inOrder.verify(inputOutput).readLine();
         inOrder.verify(inputOutput).print(120);
+    }
+
+    @Test
+    public void strings() {
+        String sample = "var n : string := \"foo\" + \"bar\";\n" +
+                "read n;\n" +
+                "print n;";
+        when(inputOutput.readLine()).thenReturn("string");
+        new Executor(sample).execute(inputOutput);
+        verify(inputOutput).print("string");
     }
 
     @Test(expected = AssertionFailureException.class)

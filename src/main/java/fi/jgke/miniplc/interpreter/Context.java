@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Context {
-    ArrayList<Map<String, Variable>> variables;
-    private InputOutput io;
+    private final ArrayList<Map<String, Variable>> variables;
+    private final InputOutput io;
 
     public Context(InputOutput io) {
         this.variables = new ArrayList<>();

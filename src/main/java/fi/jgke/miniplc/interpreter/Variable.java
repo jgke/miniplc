@@ -30,17 +30,14 @@ public class Variable {
                 || (type.equals(VariableType.BOOL) && value instanceof Boolean);
     }
 
-    public Variable(VariableType type) {
-        this.type = type;
-        this.value = null;
-        this.name = null;
-        this.lineNumber = 0;
-    }
-
     public Variable(VariableType type, Object value) {
         this.type = type;
         this.value = value;
         this.lineNumber = 0;
+        checkType(type, value);
+    }
+
+    private void checkType(VariableType type, Object value) {
         if (value == null || !typeMatches(type, value)) {
             throw new IllegalStateException();
         }
@@ -58,9 +55,7 @@ public class Variable {
         this.type = type;
         this.value = value;
         this.lineNumber = lineNumber;
-        if (value == null || !typeMatches(type, value)) {
-            throw new IllegalStateException();
-        }
+        checkType(type, value);
     }
 
     public String getName() {
@@ -76,10 +71,6 @@ public class Variable {
             throw new UninitializedVariableException(this);
         }
 
-        return value;
-    }
-
-    public Object getNullableValue() throws UninitializedVariableException {
         return value;
     }
 

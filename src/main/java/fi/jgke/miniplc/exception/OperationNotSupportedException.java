@@ -16,7 +16,6 @@
 package fi.jgke.miniplc.exception;
 
 import fi.jgke.miniplc.tokenizer.Token;
-import fi.jgke.miniplc.tokenizer.TokenValue;
 import fi.jgke.miniplc.interpreter.VariableType;
 
 public class OperationNotSupportedException extends RuntimeException {

@@ -16,7 +16,7 @@
 package fi.jgke.miniplc.exception;
 
 public class RuntimeException extends java.lang.RuntimeException {
-    public RuntimeException(String s) {
+    protected RuntimeException(String s) {
         super(s);
     }
 }

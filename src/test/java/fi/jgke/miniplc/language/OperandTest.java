@@ -16,7 +16,6 @@
 package fi.jgke.miniplc.language;
 
 import fi.jgke.miniplc.exception.RuntimeException;
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
@@ -32,16 +31,8 @@ import static org.junit.Assert.*;
 
 public class OperandTest {
 
-    private TokenQueue with(Token... tokens) throws UnexpectedCharacterException {
-        TokenQueue tokenQueue = new TokenQueue("");
-        for (Object token : tokens) {
-            tokenQueue.add((Token) token);
-        }
-        return tokenQueue;
-    }
-
     private void testWith(Context context, VariableType variableType, Object value, Token... tokens)
-            throws RuntimeException, UnexpectedCharacterException {
+            throws RuntimeException {
         ConsumedRule consume = Builder.operand().consume(TokenQueue.of(tokens));
 
         Variable var = consume.getVariable(context);
@@ -51,37 +42,37 @@ public class OperandTest {
     }
 
     private void testWith(TokenValue type, VariableType variableType, Object value)
-            throws RuntimeException, UnexpectedCharacterException {
+            throws RuntimeException {
         Context context = new Context(InputOutput.getInstance());
         testWith(context, variableType, value, new Token(type, value));
     }
 
     @Test
-    public void parseInt() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.INTCONST, VariableType.INT, 5);
+    public void parseInt() throws RuntimeException {
+        testWith(TokenValue.INT_CONST, VariableType.INT, 5);
     }
 
     @Test
-    public void parseString() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.STRINGCONST, VariableType.STRING, "Foo");
+    public void parseString() throws RuntimeException {
+        testWith(TokenValue.STRING_CONST, VariableType.STRING, "Foo");
     }
 
     @Test
-    public void parseBoolean() throws UnexpectedCharacterException, RuntimeException {
-        testWith(TokenValue.BOOLCONST, VariableType.BOOL, true);
+    public void parseBoolean() throws RuntimeException {
+        testWith(TokenValue.BOOL_CONST, VariableType.BOOL, true);
     }
 
     @Test
-    public void parseIdentifier() throws UnexpectedCharacterException, RuntimeException {
+    public void parseIdentifier() throws RuntimeException {
         Context context = new Context(InputOutput.getInstance());
         context.addVariable(new Variable("bar", 1, VariableType.STRING, "foo"));
         testWith(context, VariableType.STRING, "foo", new Token(TokenValue.IDENTIFIER, "bar"));
     }
 
     @Test
-    public void parseStatement() throws UnexpectedCharacterException, RuntimeException {
+    public void parseStatement() throws RuntimeException {
         Token left = new Token(TokenValue.OPEN_BRACE);
-        Token middle = new Token(TokenValue.INTCONST, 5);
+        Token middle = new Token(TokenValue.INT_CONST, 5);
         Token right = new Token(TokenValue.CLOSE_BRACE);
         Context context = new Context(InputOutput.getInstance());
         context.addVariable(new Variable("bar", 1, VariableType.STRING, "foo"));

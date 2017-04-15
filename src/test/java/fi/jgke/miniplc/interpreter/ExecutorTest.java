@@ -3,7 +3,6 @@ package fi.jgke.miniplc.interpreter;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.exception.RuntimeException;
 import org.junit.*;
 import org.mockito.ArgumentCaptor;
@@ -12,7 +11,7 @@ import java.util.List;
 
 public class ExecutorTest {
 
-    InputOutput io;
+    private InputOutput io;
 
     @Before
     public void setUp() throws Exception {
@@ -20,7 +19,7 @@ public class ExecutorTest {
     }
 
     @Test
-    public void testOne() throws UnexpectedCharacterException, RuntimeException {
+    public void testOne() throws RuntimeException {
         String s = "var X : int := 4 + (6 * 2);\n" +
                 "print X;";
         Executor executor = new Executor(s);
@@ -35,7 +34,7 @@ public class ExecutorTest {
     }
 
     @Test
-    public void testTwo() throws UnexpectedCharacterException, RuntimeException {
+    public void testTwo() throws RuntimeException {
         String s = "var nTimes : int := 0;\n" +
                 "print \"How many times?\"; \n" +
                 "read nTimes; \n" +
@@ -69,7 +68,7 @@ public class ExecutorTest {
     }
 
     @Test
-    public void testThree() throws UnexpectedCharacterException, RuntimeException {
+    public void testThree() throws RuntimeException {
         String s = "print \"Give a number\"; \n" +
                 "     var n : int;\n" +
                 "     read n;\n" +

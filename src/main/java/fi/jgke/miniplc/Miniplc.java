@@ -15,7 +15,6 @@
  */
 package fi.jgke.miniplc;
 
-import fi.jgke.miniplc.exception.*;
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.interpreter.Executor;
 import fi.jgke.miniplc.interpreter.InputOutput;
@@ -27,7 +26,7 @@ import java.nio.file.Paths;
 
 public class Miniplc {
 
-    public static void main(String[] args) throws UnexpectedCharacterException, RuntimeException, IOException {
+    public static void main(String[] args) throws RuntimeException, IOException {
         if (args.length != 1) {
             System.err.println("Invalid number of arguments: expected one");
             System.exit(-1);

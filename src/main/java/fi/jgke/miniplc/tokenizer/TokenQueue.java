@@ -23,7 +23,7 @@ import fi.jgke.miniplc.exception.UnexpectedTokenException;
 import java.util.*;
 
 public class TokenQueue {
-    ArrayDeque<Token> tokens;
+    private final ArrayDeque<Token> tokens;
 
     private final Map<Character, Character> escapeMap;
     private final Map<String, TokenValue> keywords;
@@ -109,7 +109,7 @@ public class TokenQueue {
             case '!':
                 return new Token(TokenValue.NOT);
             case '<':
-                return new Token(TokenValue.LESSTHAN);
+                return new Token(TokenValue.LESS_THAN);
             case '=':
                 return new Token(TokenValue.EQUALS);
 
@@ -117,17 +117,17 @@ public class TokenQueue {
             case '/':
                 if (!input.isEmpty() && input.peek() == '/') {
                     /* It's a comment, remove the rest of the line */
-                    while (!input.isEmpty() && input.remove() != '\n') ;
+                    while (!input.isEmpty() && input.remove() != '\n') {}
                     lineNumber++;
                     return readToken(input);
                 } else if (!input.isEmpty() && input.peek() == '*') {
                     input.remove();
-                    if(input.peek() == '\n') {
+                    if(!input.isEmpty() && input.element() == '\n') {
                         lineNumber++;
                     }
                     /* Multiline comment, remove until end of the multiline comment */
                     try {
-                        while (input.remove() != '*' && input.element() != '/') {
+                        while (input.remove() != '*' || input.element() != '/') {
                             if (input.peek() == '\n') {
                                 lineNumber++;
                             }
@@ -172,7 +172,7 @@ public class TokenQueue {
                 if(c == '\n')
                     lineNumber++;
                 if (c == '"')
-                    return new Token(TokenValue.STRINGCONST, token);
+                    return new Token(TokenValue.STRING_CONST, token);
                 if (c == '\\') {
                     char cc = input.remove();
                     c = escapeMap.getOrDefault(cc, cc);
@@ -195,7 +195,7 @@ public class TokenQueue {
                 else if (isLetter(c))
                     throw new UnexpectedCharacterException(lineNumber, c);
                 else
-                    return new Token(TokenValue.INTCONST, Integer.parseInt(token));
+                    return new Token(TokenValue.INT_CONST, Integer.parseInt(token));
                 input.remove();
             }
         }
@@ -216,16 +216,17 @@ public class TokenQueue {
     }
 
     private Token getTokenFromWord(String token) {
-        if (token.equals("true")) {
-            return new Token(TokenValue.BOOLCONST, true);
-        } else if (token.equals("false")) {
-            return new Token(TokenValue.BOOLCONST, false);
-        } else if (token.equals("int")) {
-            return new Token(TokenValue.TYPE, VariableType.INT);
-        } else if (token.equals("string")) {
-            return new Token(TokenValue.TYPE, VariableType.STRING);
-        } else if (token.equals("bool")) {
-            return new Token(TokenValue.TYPE, VariableType.BOOL);
+        switch (token) {
+            case "true":
+                return new Token(TokenValue.BOOL_CONST, true);
+            case "false":
+                return new Token(TokenValue.BOOL_CONST, false);
+            case "int":
+                return new Token(TokenValue.TYPE, VariableType.INT);
+            case "string":
+                return new Token(TokenValue.TYPE, VariableType.STRING);
+            case "bool":
+                return new Token(TokenValue.TYPE, VariableType.BOOL);
         }
         TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
         Object tokenValue = values.getOrDefault(type, token);
@@ -246,7 +247,7 @@ public class TokenQueue {
     }
 
 
-    public void add(Token token) {
+    private void add(Token token) {
         tokens.add(token);
     }
 
@@ -261,8 +262,7 @@ public class TokenQueue {
 
 
     public Token remove() {
-        Token token = tokens.remove();
-        return token;
+        return tokens.remove();
     }
 
     public boolean isEmpty() {

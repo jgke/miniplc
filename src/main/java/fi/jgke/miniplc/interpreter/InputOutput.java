@@ -3,7 +3,7 @@ package fi.jgke.miniplc.interpreter;
 import java.util.Scanner;
 
 public class InputOutput {
-    private static Scanner input = new Scanner(System.in);
+    private static final Scanner input = new Scanner(System.in);
     private static InputOutput instance;
 
     private InputOutput() {

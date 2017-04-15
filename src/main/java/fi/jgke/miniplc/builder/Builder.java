@@ -9,6 +9,7 @@ import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
 
 import java.util.List;
+import java.util.Objects;
 
 import static fi.jgke.miniplc.builder.BaseRules.*;
 import static fi.jgke.miniplc.builder.Terminal.*;
@@ -41,11 +42,11 @@ public class Builder {
         return
                 any(
                         rule(
-                                all(var, varIdent, colon, type, maybe(assign, expression())),
+                                all(var, identifier, colon, type, maybe(assign, expression())),
                                 Builder::createVariable
                         ),
                         rule(
-                                all(varIdent, assign, expression()),
+                                all(identifier, assign, expression()),
                                 Builder::updateVariable
                         ),
                         rule(
@@ -53,15 +54,15 @@ public class Builder {
                                 Builder::printExpression
                         ),
                         rule(
-                                all(read, varIdent),
+                                all(read, identifier),
                                 Builder::readVariable
                         ),
                         rule(
-                                all(Assert, openbrace, expression(), closebrace),
+                                all(Assert, openBrace, expression(), closeBrace),
                                 Builder::assertExpression
                         ),
                         rule(
-                                all(For, varIdent, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
+                                all(For, identifier, in, expression(), range, expression(), Do, lazy(Builder::statements), end, For),
                                 Builder::forLoop
                         )
                 );
@@ -88,22 +89,22 @@ public class Builder {
     }
 
     public static Rule operator() {
-        return any(plus, minus, times, divide, lessthan, equals, and);
+        return any(plus, minus, times, divide, lessThan, equals, and);
     }
 
     public static Rule operand() {
         return any(
                 rule(
-                        all(any(intconst, stringconst, boolconst)),
+                        all(any(intConst, stringConst, boolConst)),
                         (rules, context) -> handleConstant(rules)),
                 rule(
-                        all(varIdent),
+                        all(identifier),
                         (rules, context) -> {
                             Token token = rules.get(0).getToken();
                             return context.getVariable(token.getString(), token.getLineNumber());
                         }),
                 rule(
-                        all(openbrace, lazy(Builder::expression), closebrace),
+                        all(openBrace, lazy(Builder::expression), closeBrace),
                         (rules, context) -> rules.get(1).getVariable(context)
                 )
         );
@@ -123,19 +124,19 @@ public class Builder {
 
     private static Object forLoop(List<ConsumedRule> rules, Context context) {
         // Use 'in' and '..' as the line number sources
-        int startlinenumber = rules.get(2).getToken().getLineNumber();
-        int endlinenumber = rules.get(4).getToken().getLineNumber();
+        int startLineNumber = rules.get(2).getToken().getLineNumber();
+        int endLineNumber = rules.get(4).getToken().getLineNumber();
         String loopVariableName = rules.get(1).getToken().getString();
         Variable startVariable = rules.get(3).getVariable(context);
         Variable endVariable = rules.get(5).getVariable(context);
         if (!startVariable.getType().equals(VariableType.INT))
-            throw new TypeException(startlinenumber, VariableType.INT, startVariable.getType());
+            throw new TypeException(startLineNumber, VariableType.INT, startVariable.getType());
         if (!endVariable.getType().equals(VariableType.INT))
-            throw new TypeException(endlinenumber, VariableType.INT, endVariable.getType());
+            throw new TypeException(endLineNumber, VariableType.INT, endVariable.getType());
         Integer start = (Integer) startVariable.getValue();
         Integer end = (Integer) endVariable.getValue();
 
-        Variable loopVariable = new Variable(loopVariableName, endlinenumber, VariableType.INT, start);
+        Variable loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, start);
         context.updateVariable(loopVariable);
 
         for (Integer i = start; i <= end; i++) {
@@ -144,7 +145,7 @@ public class Builder {
             rules.get(7).execute(context);
 
             context.popFrame();
-            loopVariable = new Variable(loopVariableName, endlinenumber, VariableType.INT, i + 1);
+            loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, i + 1);
             context.updateVariable(loopVariable);
         }
 
@@ -229,75 +230,42 @@ public class Builder {
         if (!b.isEmpty()) {
             Token operator = b.get(0).getToken();
             Variable right = b.get(1).getVariable(context);
-            return handleOperation(context, left, operator, right);
+            return handleOperation(left, operator, right);
         }
         return left;
     }
 
-    private static Variable handleOperation(Context context, Variable left, Token operator, Variable right) {
+    private static Variable handleOperation(Variable left, Token operator, Variable right) {
         TokenValue op = operator.getValue();
 
         if (!left.getType().equals(right.getType())) {
             throw new TypeException(operator.getLineNumber(), left.getType(), right.getType());
         }
 
-        /* Booleans only support AND and EQUALS */
-        if (left.getType().equals(VariableType.BOOL) && !(op.equals(TokenValue.AND) || op.equals(TokenValue.EQUALS))) {
-            throw new OperationNotSupportedException(left.getType(), operator);
+        if (left.getType().equals(VariableType.INT)) {
+            Integer leftValue = (Integer) left.getValue();
+            Integer rightValue = (Integer) right.getValue();
+
+            if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.INT, leftValue + rightValue);
+            else if (op.equals(TokenValue.MINUS)) return new Variable(VariableType.INT, leftValue - rightValue);
+            else if (op.equals(TokenValue.TIMES)) return new Variable(VariableType.INT, leftValue * rightValue);
+            else if (op.equals(TokenValue.DIVIDE)) return new Variable(VariableType.INT, leftValue / rightValue);
+            else if (op.equals(TokenValue.LESS_THAN)) return new Variable(VariableType.BOOL, leftValue < rightValue);
+            else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, Objects.equals(leftValue, rightValue));
+        } else if (left.getType().equals(VariableType.STRING)) {
+            String leftValue = (String) left.getValue();
+            String rightValue = (String) right.getValue();
+
+            if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.STRING, leftValue + rightValue);
+            else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
+        } else if (left.getType().equals(VariableType.BOOL)) {
+            Boolean leftValue = (Boolean) left.getValue();
+            Boolean rightValue = (Boolean) right.getValue();
+
+            if (op.equals(TokenValue.AND)) return new Variable(VariableType.BOOL, leftValue && rightValue);
+            else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
         }
 
-        /* Strings only support PLUS and EQUALS */
-        if (left.getType().equals(VariableType.STRING) && !(op.equals(TokenValue.PLUS) || op.equals(TokenValue.EQUALS))) {
-            throw new OperationNotSupportedException(left.getType(), operator);
-        }
-
-        /* Cannot use AND with numbers */
-        if (left.getType().equals(VariableType.INT) && op.equals(TokenValue.AND)) {
-            throw new OperationNotSupportedException(left.getType(), operator);
-        }
-
-        switch (left.getType()) {
-            case INT: {
-                Integer leftValue = (Integer) left.getValue();
-                Integer rightValue = (Integer) right.getValue();
-                switch (op) {
-                    case PLUS:
-                        return new Variable(VariableType.INT, leftValue + rightValue);
-                    case MINUS:
-                        return new Variable(VariableType.INT, leftValue - rightValue);
-                    case TIMES:
-                        return new Variable(VariableType.INT, leftValue * rightValue);
-                    case DIVIDE:
-                        return new Variable(VariableType.INT, leftValue / rightValue);
-                    case LESSTHAN:
-                        return new Variable(VariableType.BOOL, leftValue < rightValue);
-                    case EQUALS:
-                        return new Variable(VariableType.BOOL, leftValue == rightValue);
-                }
-            }
-            break;
-            case STRING: {
-                String leftValue = (String) left.getValue();
-                String rightValue = (String) right.getValue();
-                switch (op) {
-                    case PLUS:
-                        return new Variable(VariableType.STRING, leftValue + rightValue);
-                    case EQUALS:
-                        return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
-                }
-            }
-            break;
-            case BOOL: {
-                Boolean leftValue = (Boolean) left.getValue();
-                Boolean rightValue = (Boolean) right.getValue();
-                switch (op) {
-                    case AND:
-                        return new Variable(VariableType.BOOL, leftValue && rightValue);
-                    case EQUALS:
-                        return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
-                }
-            }
-        }
         throw new OperationNotSupportedException(left.getType(), operator);
     }
 }

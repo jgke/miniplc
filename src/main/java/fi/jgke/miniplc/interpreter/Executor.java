@@ -15,20 +15,19 @@
  */
 package fi.jgke.miniplc.interpreter;
 
-import fi.jgke.miniplc.exception.UnexpectedCharacterException;
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.builder.Builder;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 
 public class Executor {
 
-    String script;
+    private final String script;
 
     public Executor(String script) {
         this.script = script;
     }
 
-    public void execute(InputOutput io) throws UnexpectedCharacterException, RuntimeException {
+    public void execute(InputOutput io) throws RuntimeException {
         TokenQueue queue = new TokenQueue(script);
         Builder.parseAndExecute(queue, new Context(io));
     }
