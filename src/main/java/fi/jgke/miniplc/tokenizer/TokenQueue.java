@@ -23,38 +23,20 @@ import fi.jgke.miniplc.exception.UnexpectedTokenException;
 import java.util.*;
 
 public class TokenQueue {
+    public static int lineNumber = 1;
     private final ArrayDeque<Token> tokens;
-
     private final Map<Character, Character> escapeMap;
     private final Map<String, TokenValue> keywords;
+    private final Map<Character, TokenValue> simpleTokens;
     private final Map<TokenValue, Object> values;
-    public static int lineNumber = 1;
 
     public TokenQueue(String file) throws UnexpectedCharacterException {
         tokens = new ArrayDeque<>();
 
-        escapeMap = new HashMap<>();
-        escapeMap.put('n', '\n');
-        escapeMap.put('"', '"');
-        escapeMap.put('t', '\t');
-
-        keywords = new HashMap<>();
-        keywords.put("var", TokenValue.VAR);
-        keywords.put("for", TokenValue.FOR);
-        keywords.put("end", TokenValue.END);
-        keywords.put("in", TokenValue.IN);
-        keywords.put("do", TokenValue.DO);
-        keywords.put("read", TokenValue.READ);
-        keywords.put("print", TokenValue.PRINT);
-        keywords.put("int", TokenValue.INT);
-        keywords.put("string", TokenValue.STRING);
-        keywords.put("bool", TokenValue.BOOL);
-        keywords.put("assert", TokenValue.ASSERT);
-
-        values = new HashMap<>();
-        values.put(TokenValue.INT, VariableType.INT);
-        values.put(TokenValue.STRING, VariableType.STRING);
-        values.put(TokenValue.BOOL, VariableType.BOOL);
+        escapeMap = getEscapeCharacters();
+        keywords = getKeywords();
+        simpleTokens = getSimpleTokens();
+        values = getTypeValues();
 
         this.tokenize(file);
     }
@@ -65,6 +47,70 @@ public class TokenQueue {
         for (Token t : tokens)
             tokenQueue.add(t);
         return tokenQueue;
+    }
+
+    public Token getExpectedToken(TokenValue... types) throws UnexpectedTokenException {
+        Token token = this.remove();
+        for (TokenValue type : types) {
+            if (token.getValue().equals(type))
+                return token;
+        }
+        throw new UnexpectedTokenException(token, types);
+    }
+
+    private void add(Token token) {
+        tokens.add(token);
+    }
+
+    public Token remove() {
+        return tokens.remove();
+    }
+
+    private Map<Character, Character> getEscapeCharacters() {
+        Map<Character, Character> escapeCharacters = new HashMap<>();
+        escapeCharacters.put('"', '"');
+        escapeCharacters.put('n', '\n');
+        escapeCharacters.put('t', '\t');
+        return escapeCharacters;
+    }
+
+    private Map<String, TokenValue> getKeywords() {
+        Map<String, TokenValue> keywords = new HashMap<>();
+        keywords.put("assert", TokenValue.ASSERT);
+        keywords.put("bool", TokenValue.BOOL);
+        keywords.put("do", TokenValue.DO);
+        keywords.put("end", TokenValue.END);
+        keywords.put("for", TokenValue.FOR);
+        keywords.put("in", TokenValue.IN);
+        keywords.put("int", TokenValue.INT);
+        keywords.put("print", TokenValue.PRINT);
+        keywords.put("read", TokenValue.READ);
+        keywords.put("string", TokenValue.STRING);
+        keywords.put("var", TokenValue.VAR);
+        return keywords;
+    }
+
+    private Map<Character, TokenValue> getSimpleTokens() {
+        Map<Character, TokenValue> simpleTokens = new HashMap<>();
+        simpleTokens.put('!', TokenValue.NOT);
+        simpleTokens.put('&', TokenValue.AND);
+        simpleTokens.put('(', TokenValue.OPEN_BRACE);
+        simpleTokens.put(')', TokenValue.CLOSE_BRACE);
+        simpleTokens.put('*', TokenValue.TIMES);
+        simpleTokens.put('+', TokenValue.PLUS);
+        simpleTokens.put('-', TokenValue.MINUS);
+        simpleTokens.put(';', TokenValue.SEMICOLON);
+        simpleTokens.put('<', TokenValue.LESS_THAN);
+        simpleTokens.put('=', TokenValue.EQUALS);
+        return simpleTokens;
+    }
+
+    private Map<TokenValue, Object> getTypeValues() {
+        Map<TokenValue, Object> values = new HashMap<>();
+        values.put(TokenValue.BOOL, VariableType.BOOL);
+        values.put(TokenValue.INT, VariableType.INT);
+        values.put(TokenValue.STRING, VariableType.STRING);
+        return values;
     }
 
     private boolean isNumber(Character c) {
@@ -80,126 +126,92 @@ public class TokenQueue {
     }
 
     private Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
-        Character beginning = input.remove();
-        while (Character.isWhitespace(beginning)) {
-            if (beginning == '\n')
-                lineNumber++;
-            if (input.isEmpty())
-                return new Token(TokenValue.EOS);
-            beginning = input.remove();
-        }
-        switch (beginning) {
-            /* Simple syntax */
-            case ';':
-                return new Token(TokenValue.SEMICOLON);
-            case '(':
-                return new Token(TokenValue.OPEN_BRACE);
-            case ')':
-                return new Token(TokenValue.CLOSE_BRACE);
+        flushWhitespace(input);
+        if (input.isEmpty())
+            return new Token(TokenValue.EOS);
 
-            /* Operators, simple cases */
-            case '+':
-                return new Token(TokenValue.PLUS);
-            case '-':
-                return new Token(TokenValue.MINUS);
-            case '*':
-                return new Token(TokenValue.TIMES);
-            case '&':
-                return new Token(TokenValue.AND);
-            case '!':
-                return new Token(TokenValue.NOT);
-            case '<':
-                return new Token(TokenValue.LESS_THAN);
-            case '=':
-                return new Token(TokenValue.EQUALS);
+        Character character = input.remove();
 
-            /* Comment or divide */
+        if (simpleTokens.containsKey(character))
+            return new Token(simpleTokens.get(character));
+
+        switch (character) {
             case '/':
-                if (!input.isEmpty() && input.peek() == '/') {
-                    /* It's a comment, remove the rest of the line */
-                    while (!input.isEmpty() && input.remove() != '\n') {}
-                    lineNumber++;
-                    return readToken(input);
-                } else if (!input.isEmpty() && input.peek() == '*') {
-                    input.remove();
-                    if(!input.isEmpty() && input.element() == '\n') {
-                        lineNumber++;
-                    }
-                    /* Multiline comment, remove until end of the multiline comment */
-                    try {
-                        while (input.remove() != '*' || input.element() != '/') {
-                            if (input.peek() == '\n') {
-                                lineNumber++;
-                            }
-                        }
-                    } catch (NoSuchElementException e) {
-                        throw new EndOfInputException();
-                    }
+                return handleCommentOrDivide(input);
 
-                    /* Poll because input might be empty here, so readToken returns EOS */
-                    input.poll();
-                    return readToken(input);
-                }
-                return new Token(TokenValue.DIVIDE);
-
-            /* Assignment or type definition */
             case ':':
-                if (!input.isEmpty() && input.peek() == '=') {
-                    input.remove();
-                    return new Token(TokenValue.ASSIGN);
-                }
-                return new Token(TokenValue.COLON);
+                return handleAssignOrColon(input);
 
             case '.':
-                if (input.isEmpty()) {
-                    throw new EndOfInputException();
-                }
-                char c = input.remove();
-                if (c != '.') {
-                    throw new UnexpectedCharacterException(lineNumber, c);
-                }
-                return new Token(TokenValue.RANGE);
+                return handleRange(input);
+
+            case '"':
+                return handleString(input);
         }
 
-        String token = "";
+        if (isNumber(character))
+            return handleNumber(input, character);
 
-        if (beginning == '"') {
-            while (true) {
-                if (input.isEmpty()) {
-                    throw new EndOfInputException();
-                }
-                char c = input.remove();
-                if(c == '\n')
-                    lineNumber++;
-                if (c == '"')
-                    return new Token(TokenValue.STRING_CONST, token);
-                if (c == '\\') {
-                    char cc = input.remove();
-                    c = escapeMap.getOrDefault(cc, cc);
-                }
-                token += c;
-            }
+        if (isLetter(character))
+            return handleToken(input, character);
+
+        throw new UnexpectedCharacterException(lineNumber, character);
+    }
+
+    private Token handleAssignOrColon(Queue<Character> input) {
+        if (!input.isEmpty() && input.peek() == '=') {
+            input.remove();
+            return new Token(TokenValue.ASSIGN);
         }
+        return new Token(TokenValue.COLON);
+    }
 
-        token += beginning;
+    private Token handleCommentOrDivide(Queue<Character> input) {
+        if (!input.isEmpty()) {
+            if (input.peek() == '/') {
+                return handleSingleLineComment(input);
 
-        if (!isLetter(beginning) && !isNumber(beginning)) {
-            throw new UnexpectedCharacterException(lineNumber, beginning);
-        }
-
-        if (beginning >= '0' && beginning <= '9') {
-            while (true) {
-                Character c = input.peek();
-                if (isNumber(c))
-                    token += c;
-                else if (isLetter(c))
-                    throw new UnexpectedCharacterException(lineNumber, c);
-                else
-                    return new Token(TokenValue.INT_CONST, Integer.parseInt(token));
+            } else if (input.peek() == '*') {
                 input.remove();
+                if (!input.isEmpty() && input.element() == '\n') {
+                    lineNumber++;
+                }
+
+                return handleMultilineComment(input);
             }
         }
+        return new Token(TokenValue.DIVIDE);
+    }
 
+    private void flushWhitespace(Queue<Character> input) {
+        while (!input.isEmpty() && Character.isWhitespace(input.element())) {
+            Character character = input.remove();
+            if (character == '\n')
+                lineNumber++;
+        }
+    }
+
+    private Token handleRange(Queue<Character> input) {
+        if (input.isEmpty()) {
+            throw new EndOfInputException();
+        }
+        char c = input.remove();
+        if (c != '.') {
+            throw new UnexpectedCharacterException(lineNumber, c);
+        }
+        return new Token(TokenValue.RANGE);
+    }
+
+    private Token handleSingleLineComment(Queue<Character> input) {
+        while (!input.isEmpty())
+            if (input.remove() == '\n')
+                break;
+        lineNumber++;
+        return readToken(input);
+    }
+
+    private Token handleToken(Queue<Character> input, Character initial) {
+        String token = "" + initial;
         while (true) {
             if (input.isEmpty()) {
                 return getTokenFromWord(token);
@@ -217,20 +229,70 @@ public class TokenQueue {
 
     private Token getTokenFromWord(String token) {
         switch (token) {
-            case "true":
-                return new Token(TokenValue.BOOL_CONST, true);
-            case "false":
-                return new Token(TokenValue.BOOL_CONST, false);
+            case "bool":
+                return new Token(TokenValue.TYPE, VariableType.BOOL);
             case "int":
                 return new Token(TokenValue.TYPE, VariableType.INT);
             case "string":
                 return new Token(TokenValue.TYPE, VariableType.STRING);
-            case "bool":
-                return new Token(TokenValue.TYPE, VariableType.BOOL);
+            case "true":
+                return new Token(TokenValue.BOOL_CONST, true);
+            case "false":
+                return new Token(TokenValue.BOOL_CONST, false);
         }
         TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
         Object tokenValue = values.getOrDefault(type, token);
         return new Token(type, tokenValue);
+    }
+
+
+    private Token handleNumber(Queue<Character> input, Character initial) {
+        String token = "" + initial;
+        while (true) {
+            Character c = input.peek();
+            if (isNumber(c))
+                token += c;
+            else if (isLetter(c))
+                throw new UnexpectedCharacterException(lineNumber, c);
+            else
+                return new Token(TokenValue.INT_CONST, Integer.parseInt(token));
+            input.remove();
+        }
+    }
+
+    private Token handleString(Queue<Character> input) {
+        String token = "";
+        while (true) {
+            if (input.isEmpty()) {
+                throw new EndOfInputException();
+            }
+            char c = input.remove();
+            if (c == '\n')
+                lineNumber++;
+            if (c == '"')
+                return new Token(TokenValue.STRING_CONST, token);
+            if (c == '\\') {
+                char cc = input.remove();
+                c = escapeMap.getOrDefault(cc, cc);
+            }
+            token += c;
+        }
+    }
+
+    private Token handleMultilineComment(Queue<Character> input) {
+        try {
+            while (input.remove() != '*' || input.element() != '/') {
+                if (input.peek() == '\n') {
+                    lineNumber++;
+                }
+            }
+            // remove the '/'
+            input.remove();
+        } catch (NoSuchElementException e) {
+            throw new EndOfInputException();
+        }
+
+        return readToken(input);
     }
 
     private void tokenize(String input) throws UnexpectedCharacterException {
@@ -244,25 +306,6 @@ public class TokenQueue {
             this.add(token);
         }
         this.add(new Token(TokenValue.EOS));
-    }
-
-
-    private void add(Token token) {
-        tokens.add(token);
-    }
-
-    public Token getExpectedToken(TokenValue... types) throws UnexpectedTokenException {
-        Token token = this.remove();
-        for (TokenValue type : types) {
-            if (token.getValue().equals(type))
-                return token;
-        }
-        throw new UnexpectedTokenException(token, types);
-    }
-
-
-    public Token remove() {
-        return tokens.remove();
     }
 
     public boolean isEmpty() {

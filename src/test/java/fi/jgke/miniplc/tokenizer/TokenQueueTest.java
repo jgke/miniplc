@@ -42,6 +42,7 @@ public class TokenQueueTest {
         tokens.put(":=", TokenValue.ASSIGN);
         tokens.put("/", TokenValue.DIVIDE);
         tokens.put("/* foo */ +", TokenValue.PLUS);
+        tokens.put("/* foo **/ +", TokenValue.PLUS);
         tokens.put("/*\nfoo\n*/ +", TokenValue.PLUS);
         tokens.put("/*\nfoo\n*\n*/ +", TokenValue.PLUS);
         tokens.put("// foo bar\n-", TokenValue.MINUS);
