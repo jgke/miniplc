@@ -25,17 +25,13 @@ public class Syntax {
                 any(
                         rule(
                                 all(statement(), Semicolon, statements()),
-                                (rules, context) -> {
-                                    rules.get(0).execute(context);
-                                    rules.get(2).execute(context);
-                                    return null;
-                                }),
+                                SyntaxHandlers::executeStatements),
                         empty()
                 ));
     }
 
     public static Rule statement() {
-        return
+        return lazy(() ->
                 any(
                         rule(
                                 all(Var, Identifier, Colon, Type, maybe(Assign, expression())),
@@ -55,18 +51,19 @@ public class Syntax {
                         rule(
                                 all(For, Identifier, In, expression(), Range, expression(), Do, statements(), End, For),
                                 SyntaxHandlers::forLoop)
-                );
+                ));
     }
 
     public static Rule expression() {
-        return lazy(() -> any(
-                rule(
-                        all(Not, operand()),
-                        SyntaxHandlers::handleNot),
-                rule(
-                        all(operand(), maybe(operator(), operand())),
-                        SyntaxHandlers::handleOperation)
-        ));
+        return lazy(() ->
+                any(
+                        rule(
+                                all(Not, operand()),
+                                SyntaxHandlers::handleNot),
+                        rule(
+                                all(operand(), maybe(operator(), operand())),
+                                SyntaxHandlers::handleOperation)
+                ));
     }
 
     public static Rule operator() {
@@ -74,16 +71,17 @@ public class Syntax {
     }
 
     public static Rule operand() {
-        return any(
-                rule(
-                        all(any(IntConst, StringConst, BoolConst)),
-                        SyntaxHandlers::handleConstant),
-                rule(
-                        all(Identifier),
-                        SyntaxHandlers::handleIdentifier),
-                rule(
-                        all(OpenBrace, expression(), CloseBrace),
-                        (rules, context) -> rules.get(1).getVariable(context))
-        );
+        return lazy(() ->
+                any(
+                        rule(
+                                all(any(IntConst, StringConst, BoolConst)),
+                                SyntaxHandlers::handleConstant),
+                        rule(
+                                all(Identifier),
+                                SyntaxHandlers::handleIdentifier),
+                        rule(
+                                all(OpenBrace, expression(), CloseBrace),
+                                SyntaxHandlers::getVariable)
+                ));
     }
 }

@@ -29,7 +29,7 @@ public class Tokenizer {
     private static final Map<Character, TokenValue> simpleTokens;
     private static final Map<TokenValue, Object> values;
 
-    private int lineNumber;
+    private static int lineNumber;
 
     public Tokenizer() {
         lineNumber = 1;
@@ -284,5 +284,9 @@ public class Tokenizer {
         }
         tokenQueue.add(new Token(TokenValue.EOS));
         return tokenQueue;
+    }
+
+    public static int getLineNumber() {
+        return lineNumber;
     }
 }

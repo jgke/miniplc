@@ -16,7 +16,6 @@
 
 package fi.jgke.miniplc.builder;
 
-import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
 
 public class Terminal extends Rule {

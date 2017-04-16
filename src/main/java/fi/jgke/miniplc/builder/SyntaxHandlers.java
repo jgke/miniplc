@@ -26,21 +26,82 @@ import fi.jgke.miniplc.tokenizer.TokenValue;
 import java.util.List;
 
 public class SyntaxHandlers {
-    public static Object handleConstant(List<ConsumedRule> rules, Context context) {
-        Token token = rules.get(0).getToken();
-        Object content = token.getContent();
-        if (content instanceof Integer)
-            return new Variable(VariableType.INT, token.getContent());
-        else if (content instanceof String)
-            return new Variable(VariableType.STRING, token.getContent());
-        else if (content instanceof Boolean)
-            return new Variable(VariableType.BOOL, token.getContent());
-        throw new UnsupportedOperationException();
+    public static Object executeStatements(List<ConsumedRule> rules, Context context) {
+        rules.get(0).execute(context);
+        rules.get(2).execute(context);
+        return null;
     }
 
-    public static Object handleIdentifier(List<ConsumedRule> rules, Context context) {
-        Token token = rules.get(0).getToken();
-        return context.getVariable(token.getString(), token.getLineNumber());
+    public static Object createVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
+        String name = rules.get(1).getToken().getString();
+        VariableType type = rules.get(3).getToken().getVariableType();
+        List<ConsumedRule> value = rules.get(4).getList();
+        if (!value.isEmpty()) {
+            Variable variable = value.get(1).getVariable(context);
+            if (!variable.getType().equals(type))
+                throw new TypeException(linenumber, type, variable.getType());
+            variable.setName(name);
+            context.addVariable(variable);
+        } else {
+            context.addVariable(new Variable(name, linenumber, type));
+        }
+        return null;
+    }
+
+    public static Object updateVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
+        String name = rules.get(0).getToken().getString();
+        Variable variable = context.getVariable(name, linenumber);
+        Variable newValue = rules.get(2).getVariable(context);
+        context.updateVariable(new Variable(name, variable.getLineNumber(), variable.getType(), newValue.getValue()));
+        return null;
+    }
+
+    public static Object printExpression(List<ConsumedRule> rules, Context context) {
+        Variable output = rules.get(1).getVariable(context);
+        context.print(output.getValue());
+        return null;
+    }
+
+    public static Object readVariable(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
+        String name = rules.get(1).getToken().getString();
+        Variable variable = context.getVariable(name, linenumber);
+
+        /* Why, MiniPL ;__;
+        * read :: () -> Int
+        * read :: () -> String
+        */
+        if (variable.getType().equals(VariableType.INT)) {
+            String input = context.readLine();
+            try {
+                Integer value = Integer.parseInt(input);
+                variable = new Variable(name, linenumber, VariableType.INT, value);
+            } catch (NumberFormatException ignored) {
+                throw new IntegerParseError(linenumber);
+            }
+        } else if (variable.getType().equals(VariableType.STRING)) {
+            String input = context.readLine();
+            variable = new Variable(name, linenumber, VariableType.STRING, input);
+        } else {
+            throw new UnsupportedInputException(linenumber);
+        }
+
+        context.updateVariable(variable);
+        return null;
+    }
+
+    public static Object assertExpression(List<ConsumedRule> rules, Context context) {
+        int linenumber = rules.get(0).getToken().getLineNumber();
+        Variable variable = rules.get(2).getVariable(context);
+        if (!variable.getType().equals(VariableType.BOOL)) {
+            throw new TypeException(linenumber, VariableType.BOOL, variable.getType());
+        }
+        Boolean value = (Boolean) variable.getValue();
+        if (!value)
+            throw new AssertionFailureException(linenumber);
+        return null;
     }
 
     public static Object forLoop(List<ConsumedRule> rules, Context context) {
@@ -82,78 +143,6 @@ public class SyntaxHandlers {
         return new Variable(VariableType.BOOL, !value);
     }
 
-    public static Object assertExpression(List<ConsumedRule> rules, Context context) {
-        int linenumber = rules.get(0).getToken().getLineNumber();
-        Variable variable = rules.get(2).getVariable(context);
-        if (!variable.getType().equals(VariableType.BOOL)) {
-            throw new TypeException(linenumber, VariableType.BOOL, variable.getType());
-        }
-        Boolean value = (Boolean) variable.getValue();
-        if (!value)
-            throw new AssertionFailureException(linenumber);
-        return null;
-    }
-
-    public static Object readVariable(List<ConsumedRule> rules, Context context) {
-        int linenumber = rules.get(0).getToken().getLineNumber();
-        String name = rules.get(1).getToken().getString();
-        Variable variable = context.getVariable(name, linenumber);
-
-        /* Why, MiniPL ;__;
-        * read :: () -> Int
-        * read :: () -> String
-        */
-        if (variable.getType().equals(VariableType.INT)) {
-            String input = context.readLine();
-            try {
-                Integer value = Integer.parseInt(input);
-                variable = new Variable(name, linenumber, VariableType.INT, value);
-            } catch (NumberFormatException ignored) {
-                throw new IntegerParseError(linenumber);
-            }
-        } else if (variable.getType().equals(VariableType.STRING)) {
-            String input = context.readLine();
-            variable = new Variable(name, linenumber, VariableType.STRING, input);
-        } else {
-            throw new UnsupportedInputException(linenumber);
-        }
-
-        context.updateVariable(variable);
-        return null;
-    }
-
-    public static Object printExpression(List<ConsumedRule> rules, Context context) {
-        Variable output = rules.get(1).getVariable(context);
-        context.print(output.getValue());
-        return null;
-    }
-
-    public static Object updateVariable(List<ConsumedRule> rules, Context context) {
-        int linenumber = rules.get(0).getToken().getLineNumber();
-        String name = rules.get(0).getToken().getString();
-        Variable variable = context.getVariable(name, linenumber);
-        Variable newValue = rules.get(2).getVariable(context);
-        context.updateVariable(new Variable(name, variable.getLineNumber(), variable.getType(), newValue.getValue()));
-        return null;
-    }
-
-    public static Object createVariable(List<ConsumedRule> rules, Context context) {
-        int linenumber = rules.get(0).getToken().getLineNumber();
-        String name = rules.get(1).getToken().getString();
-        VariableType type = rules.get(3).getToken().getVariableType();
-        List<ConsumedRule> value = rules.get(4).getList();
-        if (!value.isEmpty()) {
-            Variable variable = value.get(1).getVariable(context);
-            if (!variable.getType().equals(type))
-                throw new TypeException(linenumber, type, variable.getType());
-            variable.setName(name);
-            context.addVariable(variable);
-        } else {
-            context.addVariable(new Variable(name, linenumber, type));
-        }
-        return null;
-    }
-
     public static Object handleOperation(List<ConsumedRule> rules, Context context) {
         Variable left = rules.get(0).getVariable(context);
         List<ConsumedRule> b = rules.get(1).getList();
@@ -179,6 +168,27 @@ public class SyntaxHandlers {
         }
 
         throw new OperationNotSupportedException(left.getType(), operator);
+    }
+
+    public static Object handleConstant(List<ConsumedRule> rules, Context context) {
+        Token token = rules.get(0).getToken();
+        Object content = token.getContent();
+        if (content instanceof Integer)
+            return new Variable(VariableType.INT, token.getContent());
+        else if (content instanceof String)
+            return new Variable(VariableType.STRING, token.getContent());
+        else if (content instanceof Boolean)
+            return new Variable(VariableType.BOOL, token.getContent());
+        throw new UnsupportedOperationException();
+    }
+
+    public static Object handleIdentifier(List<ConsumedRule> rules, Context context) {
+        Token token = rules.get(0).getToken();
+        return context.getVariable(token.getString(), token.getLineNumber());
+    }
+
+    public static Object getVariable(List<ConsumedRule> rules, Context context) {
+        return rules.get(1).getVariable(context);
     }
 
     private static Variable handleIntegerOperation(Token operator, Integer left, Integer right) {

@@ -21,10 +21,8 @@ import static fi.jgke.miniplc.interpreter.VariableType.*;
 import fi.jgke.miniplc.interpreter.VariableType;
 import org.junit.Test;
 
-import static java.util.function.Predicate.isEqual;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -37,6 +35,7 @@ public class VariableTypeTest {
         assertThat(VariableType.values(), hasItemInArray(STRING));
         assertThat(VariableType.values(), hasItemInArray(BOOL));
     }
+
     @Test
     public void parsesType() throws Exception {
         assertThat(VariableType.valueOf("INT"), equalTo(INT));

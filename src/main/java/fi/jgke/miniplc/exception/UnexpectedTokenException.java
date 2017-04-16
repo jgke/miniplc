@@ -18,11 +18,9 @@ package fi.jgke.miniplc.exception;
 import fi.jgke.miniplc.tokenizer.Token;
 import fi.jgke.miniplc.tokenizer.TokenValue;
 
-import java.util.Arrays;
-
 public class UnexpectedTokenException extends RuntimeException {
     public UnexpectedTokenException(Token token, TokenValue type) {
         super("Unexpected token near line " + token.getLineNumber() + ": " + token.getValue() +
-                        " (expected " + type + ")");
+                " (expected " + type + ")");
     }
 }

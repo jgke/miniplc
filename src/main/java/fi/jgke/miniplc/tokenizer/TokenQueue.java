@@ -22,8 +22,7 @@ import java.util.Collections;
 import java.util.Queue;
 
 public class TokenQueue {
-    public static int lineNumber = 1;
-    private Queue<Token> tokens;
+    private final Queue<Token> tokens;
 
     public TokenQueue(String input) throws UnexpectedCharacterException {
         tokens = new Tokenizer().tokenize(input);
@@ -34,6 +33,10 @@ public class TokenQueue {
         tokenQueue.getExpectedToken(TokenValue.EOS);
         Collections.addAll(tokenQueue.tokens, tokens);
         return tokenQueue;
+    }
+
+    public static int getLineNumber() {
+        return Tokenizer.getLineNumber();
     }
 
     public Token getExpectedToken(TokenValue type) throws UnexpectedTokenException {

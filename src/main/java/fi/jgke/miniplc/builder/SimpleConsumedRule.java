@@ -27,7 +27,7 @@ public class SimpleConsumedRule extends ConsumedRule {
     @Override
     public String toString() {
         return "SimpleConsumedRule{" +
-                "content=" + (content instanceof Terminal ? (Terminal)content : content) +
+                "content=" + (content instanceof Terminal ? (Terminal) content : content) +
                 '}';
     }
 }

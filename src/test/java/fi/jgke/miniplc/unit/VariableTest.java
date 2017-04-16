@@ -16,7 +16,6 @@
 
 package fi.jgke.miniplc.unit;
 
-import fi.jgke.miniplc.exception.TypeException;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
 import org.junit.Test;
@@ -28,8 +27,8 @@ import static org.junit.Assert.*;
 
 public class VariableTest {
 
-    private Variable createVariable(VariableType type, Object value) {
-        return new Variable(type, value);
+    private void createVariable(VariableType type, Object value) {
+        new Variable(type, value);
     }
 
     @Test
@@ -44,7 +43,7 @@ public class VariableTest {
         types.put(VariableType.INT, true);
         types.put(VariableType.INT, "str");
         types.put(VariableType.INT, null);
-        for(VariableType type : types.keySet()) {
+        for (VariableType type : types.keySet()) {
             try {
                 createVariable(type, types.get(type));
                 assertTrue(false);

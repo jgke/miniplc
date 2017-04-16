@@ -30,13 +30,13 @@ public class Token {
     public Token(TokenValue value, Object content) {
         this.value = value;
         this.content = content;
-        this.lineNumber = TokenQueue.lineNumber;
+        this.lineNumber = TokenQueue.getLineNumber();
     }
 
     public Token(TokenValue value) {
         this.value = value;
         this.content = null;
-        this.lineNumber = TokenQueue.lineNumber;
+        this.lineNumber = TokenQueue.getLineNumber();
     }
 
     public TokenValue getValue() {

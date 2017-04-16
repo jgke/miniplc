@@ -24,6 +24,7 @@ public class TokenValueTest {
     public void values() throws Exception {
         TokenValue.values();
     }
+
     @Test
     public void valueOf() throws Exception {
         TokenValue.valueOf("MINUS");

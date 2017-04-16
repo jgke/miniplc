@@ -42,7 +42,7 @@ public class Miniplc {
             String content = new String(Files.readAllBytes(Paths.get(args[0])));
             Executor executor = new Executor(content);
             executor.execute(InputOutput.getInstance());
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }

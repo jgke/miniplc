@@ -63,7 +63,7 @@ public class TokenQueueTest {
         tokens.put("bool", TokenValue.TYPE);
         tokens.put("assert", TokenValue.ASSERT);
 
-        for(String key : tokens.keySet()) {
+        for (String key : tokens.keySet()) {
             TokenQueue tokenQueue = new TokenQueue(key);
             assertEquals(tokens.get(key), tokenQueue.remove().getValue());
             assertEquals(TokenValue.EOS, tokenQueue.remove().getValue());

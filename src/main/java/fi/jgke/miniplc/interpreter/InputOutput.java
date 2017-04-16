@@ -26,7 +26,7 @@ public class InputOutput {
     }
 
     public static InputOutput getInstance() {
-        if(InputOutput.instance == null)
+        if (InputOutput.instance == null)
             InputOutput.instance = new InputOutput();
         return InputOutput.instance;
     }

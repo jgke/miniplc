@@ -61,13 +61,13 @@ public class BuilderTest {
         samples.put("var a : int; i := 5;", UndefinedVariableException.class);
         InputOutput io = InputOutput.getInstance();
 
-        for(String s : samples.keySet()) {
+        for (String s : samples.keySet()) {
             try {
                 TokenQueue tokenQueue = new TokenQueue(s);
                 Context context = new Context(io);
                 Builder.parseAndExecute(tokenQueue, context);
                 assertFalse(true);
-            } catch(RuntimeException e) {
+            } catch (RuntimeException e) {
                 assertEquals(samples.get(s), e.getClass());
             }
         }
