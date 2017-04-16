@@ -90,15 +90,15 @@ public class Tokenizer {
     }
 
     private boolean isNumber(Character c) {
-        return c != null && c >= '0' && c <= '9';
+        return c != null && Character.isDigit(c);
     }
 
     private boolean isLetter(Character c) {
-        return c != null && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+        return c != null && Character.isLetter(c);
     }
 
     private boolean isIdentifierCharacter(Character c) {
-        return c != null && (isNumber(c) || isLetter(c));
+        return isNumber(c) || isLetter(c);
     }
 
     private Token readToken(Queue<Character> input) throws UnexpectedCharacterException {
@@ -204,18 +204,16 @@ public class Tokenizer {
     }
 
     private Token getTokenFromWord(String token) {
-        switch (token) {
-            case "bool":
-                return new Token(TokenValue.TYPE, VariableType.BOOL);
-            case "int":
-                return new Token(TokenValue.TYPE, VariableType.INT);
-            case "string":
-                return new Token(TokenValue.TYPE, VariableType.STRING);
-            case "true":
-                return new Token(TokenValue.BOOL_CONST, true);
-            case "false":
-                return new Token(TokenValue.BOOL_CONST, false);
-        }
+        if (token.equals("bool"))
+            return new Token(TokenValue.TYPE, VariableType.BOOL);
+        else if (token.equals("int"))
+            return new Token(TokenValue.TYPE, VariableType.INT);
+        else if (token.equals("string"))
+            return new Token(TokenValue.TYPE, VariableType.STRING);
+        else if (token.equals("true"))
+            return new Token(TokenValue.BOOL_CONST, true);
+        else if (token.equals("false"))
+            return new Token(TokenValue.BOOL_CONST, false);
         TokenValue type = keywords.getOrDefault(token, TokenValue.IDENTIFIER);
         Object tokenValue = values.getOrDefault(type, token);
         return new Token(type, tokenValue);

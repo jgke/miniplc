@@ -30,6 +30,7 @@ public class TokenQueueTest {
     public void testParseValues() throws UnexpectedCharacterException {
         Map<String, TokenValue> tokens = new HashMap<>();
         tokens.put(";", TokenValue.SEMICOLON);
+        tokens.put(":", TokenValue.COLON);
         tokens.put("(", TokenValue.OPEN_BRACE);
         tokens.put(")", TokenValue.CLOSE_BRACE);
         tokens.put("+", TokenValue.PLUS);
@@ -41,12 +42,14 @@ public class TokenQueueTest {
         tokens.put("=", TokenValue.EQUALS);
         tokens.put(":=", TokenValue.ASSIGN);
         tokens.put("/", TokenValue.DIVIDE);
+        tokens.put("/ ", TokenValue.DIVIDE);
         tokens.put("/* foo */ +", TokenValue.PLUS);
         tokens.put("/* foo **/ +", TokenValue.PLUS);
         tokens.put("/*\nfoo\n*/ +", TokenValue.PLUS);
         tokens.put("/*\nfoo\n*\n*/ +", TokenValue.PLUS);
         tokens.put("// foo bar\n-", TokenValue.MINUS);
         tokens.put("foo", TokenValue.IDENTIFIER);
+        tokens.put("BAR5", TokenValue.IDENTIFIER);
         tokens.put("100", TokenValue.INT_CONST);
         tokens.put("\"foo\nbar\"", TokenValue.STRING_CONST);
         tokens.put("true", TokenValue.BOOL_CONST);
@@ -69,6 +72,13 @@ public class TokenQueueTest {
             assertEquals(TokenValue.EOS, tokenQueue.remove().getValue());
             assertTrue(tokenQueue.isEmpty());
         }
+    }
+
+    @Test
+    public void testEOS() {
+        TokenQueue tokenQueue = new TokenQueue("//");
+        assertEquals(TokenValue.EOS, tokenQueue.remove().getValue());
+        assertTrue(tokenQueue.isEmpty());
     }
 
     @Test(expected = EndOfInputException.class)
