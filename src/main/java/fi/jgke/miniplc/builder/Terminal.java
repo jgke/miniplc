@@ -19,7 +19,7 @@ package fi.jgke.miniplc.builder;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 import fi.jgke.miniplc.tokenizer.TokenValue;
 
-public class Terminal implements Rule {
+public class Terminal extends Rule {
 
     private final TokenValue tokenValue;
 
@@ -28,12 +28,22 @@ public class Terminal implements Rule {
     }
 
     @Override
-    public boolean matches(TokenQueue tokenQueue) {
-        return tokenQueue.element().getValue().equals(tokenValue);
+    public boolean matches() {
+        return tokenQueue
+                .element()
+                .getValue()
+                .equals(tokenValue);
     }
 
     @Override
-    public ConsumedRule consume(TokenQueue tokenQueue) {
+    public String toString() {
+        return "Terminal{" +
+                "tokenValue=" + tokenValue +
+                '}';
+    }
+
+    @Override
+    public ConsumedRule consume() {
         return new SimpleConsumedRule(tokenQueue.getExpectedToken(tokenValue));
     }
 

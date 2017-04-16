@@ -33,7 +33,10 @@ public class OperandTest {
 
     private void testWith(Context context, VariableType variableType, Object value, Token... tokens)
             throws RuntimeException {
-        ConsumedRule consume = Builder.operand().consume(TokenQueue.of(tokens));
+        ConsumedRule consume = Builder
+                .operand()
+                .with(TokenQueue.of(tokens))
+                .consume();
 
         Variable var = consume.getVariable(context);
 

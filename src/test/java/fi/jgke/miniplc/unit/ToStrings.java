@@ -23,6 +23,6 @@ import org.junit.Test;
 public class ToStrings {
     @Test
     public void variable() {
-        System.out.println(new Variable(VariableType.BOOL, true));
+        new Variable(VariableType.BOOL, true);
     }
 }

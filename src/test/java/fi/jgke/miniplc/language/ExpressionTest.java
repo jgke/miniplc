@@ -35,7 +35,10 @@ public class ExpressionTest {
     private void testWith(VariableType variableType, Object value, Token... tokens)
             throws RuntimeException {
         Context context = new Context(InputOutput.getInstance());
-        ConsumedRule consume = Builder.expression().consume(TokenQueue.of(tokens));
+        ConsumedRule consume = Builder
+                .expression()
+                .with(TokenQueue.of(tokens))
+                .consume();
 
         Variable var = consume.getVariable(context);
 

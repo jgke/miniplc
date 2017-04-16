@@ -18,7 +18,12 @@ package fi.jgke.miniplc.builder;
 
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 
-public interface Rule {
-    boolean matches(TokenQueue tokenQueue);
-    ConsumedRule consume(TokenQueue tokenQueue);
+public abstract class Rule {
+    protected TokenQueue tokenQueue;
+    abstract boolean matches();
+    public abstract ConsumedRule consume();
+    public Rule with(TokenQueue tokenQueue) {
+        this.tokenQueue = tokenQueue;
+        return this;
+    }
 }

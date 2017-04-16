@@ -16,8 +16,6 @@
 
 package fi.jgke.miniplc.builder;
 
-import fi.jgke.miniplc.tokenizer.TokenQueue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,12 +26,12 @@ public class BaseRules {
     public static Rule empty() {
         return new Rule() {
             @Override
-            public boolean matches(TokenQueue tokenQueue) {
+            public boolean matches() {
                 return true;
             }
 
             @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
+            public ConsumedRule consume() {
                 return new SimpleConsumedRule(new ArrayList<>());
             }
         };
@@ -41,13 +39,13 @@ public class BaseRules {
 
     public static Rule all(Rule... rules) {
         return new Rule() {
-            public boolean matches(TokenQueue queue) {
-                return rules[0].matches(queue);
+            public boolean matches() {
+                return rules[0].with(tokenQueue).matches();
             }
 
-            public SimpleConsumedRule consume(TokenQueue tokenQueue) {
+            public SimpleConsumedRule consume() {
                 List<ConsumedRule> tokens = Arrays.stream(rules)
-                        .map(rule -> rule.consume(tokenQueue))
+                        .map(rule -> rule.with(tokenQueue).consume())
                         .collect(Collectors.toList());
                 return new SimpleConsumedRule(tokens);
             }
@@ -57,16 +55,18 @@ public class BaseRules {
     public static Rule maybe(Rule... rules) {
         return new Rule() {
             @Override
-            public boolean matches(TokenQueue tokenQueue) {
+            public boolean matches() {
                 return true;
             }
 
-            public ConsumedRule consume(TokenQueue queue) {
-                if (rules[0].matches(queue))
-                    return new SimpleConsumedRule(Arrays.stream(rules)
-                            .map(r -> r.consume(queue))
-                            .collect(Collectors.toList()));
-                return new SimpleConsumedRule(new ArrayList<>());
+            public ConsumedRule consume() {
+                boolean ruleMatches = rules[0].with(tokenQueue).matches();
+                List<ConsumedRule> consumedRules = Arrays.stream(rules)
+                        .map(rule -> rule.with(tokenQueue))
+                        .filter((__) -> ruleMatches)
+                        .map(Rule::consume)
+                        .collect(Collectors.toList());
+                return new SimpleConsumedRule(consumedRules);
             }
         };
     }
@@ -74,17 +74,20 @@ public class BaseRules {
     public static Rule any(Rule... rules) {
         return new Rule() {
             @Override
-            public boolean matches(TokenQueue tokenQueue) {
-                return Arrays.stream(rules).anyMatch(rule -> rule.matches(tokenQueue));
+            public boolean matches() {
+                return Arrays.stream(rules).anyMatch(rule -> rule.with(tokenQueue).matches());
             }
 
             @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
-                for (Rule rule : rules) {
-                    if (rule.matches(tokenQueue))
-                        return rule.consume(tokenQueue);
-                }
-                throw new RuleNotMatchedException(tokenQueue.element().getLineNumber());
+            public ConsumedRule consume() {
+                return Arrays.stream(rules)
+                        .map(rule -> rule.with(tokenQueue))
+                        .filter(Rule::matches)
+                        .findFirst()
+                        .map(Rule::consume)
+                        .orElseThrow(() ->
+                                new RuleNotMatchedException(tokenQueue.element().getLineNumber())
+                        );
             }
         };
     }
@@ -92,13 +95,13 @@ public class BaseRules {
     public static Rule lazy(Supplier<Rule> provider) {
         return new Rule() {
             @Override
-            public boolean matches(TokenQueue tokenQueue) {
-                return provider.get().matches(tokenQueue);
+            public boolean matches() {
+                return provider.get().with(tokenQueue).matches();
             }
 
             @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
-                return provider.get().consume(tokenQueue);
+            public ConsumedRule consume() {
+                return provider.get().with(tokenQueue).consume();
             }
         };
     }
@@ -106,13 +109,13 @@ public class BaseRules {
     public static Rule rule(Rule when, Do something) {
         return new Rule() {
             @Override
-            public boolean matches(TokenQueue tokenQueue) {
-                return when.matches(tokenQueue);
+            public boolean matches() {
+                return when.with(tokenQueue).matches();
             }
 
             @Override
-            public ConsumedRule consume(TokenQueue tokenQueue) {
-                return new ConsumedRule(when.consume(tokenQueue).getList(), something);
+            public ConsumedRule consume() {
+                return new ConsumedRule(when.with(tokenQueue).consume().getList(), something);
             }
         };
     }
