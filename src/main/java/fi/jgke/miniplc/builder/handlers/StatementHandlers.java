@@ -33,15 +33,13 @@ public class StatementHandlers {
         String name = rules.get(1).getToken().getString();
         VariableType type = rules.get(3).getToken().getVariableType();
         List<ConsumedRule> value = rules.get(4).getList();
+        Variable variable;
         if (!value.isEmpty()) {
-            Variable variable = value.get(1).getVariable(context);
-            if (!variable.getType().equals(type))
-                throw new TypeException(linenumber, type, variable.getType());
-            variable.setName(name);
-            context.addVariable(variable);
+            variable = new Variable(name, linenumber, type, value.get(1).getVariable(context).getValue());
         } else {
-            context.addVariable(new Variable(name, linenumber, type));
+            variable = new Variable(name, linenumber, type);
         }
+        context.addVariable(variable);
         return null;
     }
 
@@ -112,32 +110,37 @@ public class StatementHandlers {
     }
 
     public static Object forLoop(List<ConsumedRule> rules, Context context) {
-        // Use 'in' and '..' as the line number sources
-        int startLineNumber = rules.get(2).getToken().getLineNumber();
-        int endLineNumber = rules.get(4).getToken().getLineNumber();
+        int loopVariableLineNumber = rules.get(2).getToken().getLineNumber();
         String loopVariableName = rules.get(1).getToken().getString();
-        Variable startVariable = rules.get(3).getVariable(context);
-        Variable endVariable = rules.get(5).getVariable(context);
-        if (!startVariable.getType().equals(VariableType.INT))
-            throw new TypeException(startLineNumber, VariableType.INT, startVariable.getType());
-        if (!endVariable.getType().equals(VariableType.INT))
-            throw new TypeException(endLineNumber, VariableType.INT, endVariable.getType());
-        Integer start = (Integer) startVariable.getValue();
-        Integer end = (Integer) endVariable.getValue();
+        Integer start = getLoopRangeLimit(rules, context, 3);
+        Integer end = getLoopRangeLimit(rules, context, 5);
 
-        Variable loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, start);
-        context.updateVariable(loopVariable);
+        ConsumedRule loopBody = rules.get(7);
 
-        for (Integer i = start; i <= end; i++) {
-            context.pushFrame();
-
-            rules.get(7).execute(context);
-
-            context.popFrame();
-            loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, i + 1);
-            context.updateVariable(loopVariable);
-        }
+        executeLoopBody(context, loopVariableLineNumber, loopVariableName, start, end, loopBody);
 
         return null;
+    }
+
+    private static Integer getLoopRangeLimit(List<ConsumedRule> rules, Context context, int index) {
+        Variable startVariable = rules.get(index).getVariable(context);
+        if (!startVariable.getType().equals(VariableType.INT))
+            throw new TypeException(rules.get(index-1).getToken().getLineNumber(), VariableType.INT, startVariable.getType());
+        return (Integer) startVariable.getValue();
+    }
+
+    private static void executeLoopBody(Context context, int endLineNumber, String loopVariableName, Integer start, Integer end, ConsumedRule loopBody) {
+        for (Integer i = start; i <= end; i++) {
+            context.pushFrame();
+            Variable loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, i);
+            context.updateVariable(loopVariable);
+
+            loopBody.execute(context);
+
+            context.popFrame();
+        }
+        // Because specification's for loop example
+        context.updateVariable(new Variable(loopVariableName, endLineNumber, VariableType.INT, end+1));
+
     }
 }

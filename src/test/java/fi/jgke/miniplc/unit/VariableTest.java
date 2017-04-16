@@ -16,6 +16,7 @@
 
 package fi.jgke.miniplc.unit;
 
+import fi.jgke.miniplc.exception.TypeException;
 import fi.jgke.miniplc.exception.UndefinedVariableException;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
@@ -28,6 +29,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class VariableTest {
@@ -52,8 +55,10 @@ public class VariableTest {
             try {
                 createVariable(p.getLeft(), p.getRight());
                 assertTrue(false);
+            } catch (TypeException e) {
+                assertNotNull(p.getRight());
             } catch (IllegalStateException e) {
-                assertTrue(true);
+                assertNull(p.getRight());
             }
         }
     }

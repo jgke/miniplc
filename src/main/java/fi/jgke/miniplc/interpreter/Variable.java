@@ -15,10 +15,11 @@
  */
 package fi.jgke.miniplc.interpreter;
 
+import fi.jgke.miniplc.exception.TypeException;
 import fi.jgke.miniplc.exception.UninitializedVariableException;
 
 public class Variable {
-    private String name;
+    private final String name;
     private final VariableType type;
     private final Object value;
     private final int lineNumber;
@@ -30,30 +31,31 @@ public class Variable {
     }
 
     public Variable(VariableType type, Object value) {
+        this.lineNumber = 0;
+        this.name = null;
         this.type = type;
         this.value = value;
-        this.lineNumber = 0;
         checkType(type, value);
     }
 
     private void checkType(VariableType type, Object value) {
         if (value == null || !typeMatches(type, value)) {
-            throw new IllegalStateException();
+            throw new TypeException(this.lineNumber, type, VariableType.getValueForObject(value));
         }
     }
 
     public Variable(String name, int lineNumber, VariableType type) {
+        this.lineNumber = lineNumber;
         this.name = name;
         this.type = type;
         this.value = null;
-        this.lineNumber = lineNumber;
     }
 
     public Variable(String name, int lineNumber, VariableType type, Object value) {
+        this.lineNumber = lineNumber;
         this.name = name;
         this.type = type;
         this.value = value;
-        this.lineNumber = lineNumber;
         checkType(type, value);
     }
 
@@ -71,10 +73,6 @@ public class Variable {
         }
 
         return value;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override

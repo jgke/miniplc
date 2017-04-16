@@ -18,5 +18,15 @@ package fi.jgke.miniplc.interpreter;
 public enum VariableType {
     INT,
     STRING,
-    BOOL
+    BOOL;
+
+    public static VariableType getValueForObject(Object value) {
+        if(value instanceof Integer)
+            return INT;
+        else if(value instanceof String)
+            return STRING;
+        else if(value instanceof Boolean)
+            return BOOL;
+        throw new IllegalStateException();
+    }
 }

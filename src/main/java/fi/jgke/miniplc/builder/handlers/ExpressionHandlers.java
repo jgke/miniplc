@@ -43,12 +43,12 @@ public class ExpressionHandlers {
         if (!b.isEmpty()) {
             Token operator = b.get(0).getToken();
             Variable right = b.get(1).getVariable(context);
-            return handleOperation(left, operator, right);
+            return handleBinaryOperation(left, operator, right);
         }
         return left;
     }
 
-    private static Variable handleOperation(Variable left, Token operator, Variable right) {
+    private static Object handleBinaryOperation(Variable left, Token operator, Variable right) {
         if (!left.getType().equals(right.getType())) {
             throw new TypeException(operator.getLineNumber(), left.getType(), right.getType());
         }
