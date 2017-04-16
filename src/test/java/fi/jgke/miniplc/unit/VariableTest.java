@@ -16,14 +16,19 @@
 
 package fi.jgke.miniplc.unit;
 
+import fi.jgke.miniplc.exception.UndefinedVariableException;
+import fi.jgke.miniplc.interpreter.Context;
+import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class VariableTest {
 
@@ -33,22 +38,37 @@ public class VariableTest {
 
     @Test
     public void typeSanity() {
-        Map<VariableType, Object> types = new HashMap<>();
-        types.put(VariableType.BOOL, "str");
-        types.put(VariableType.BOOL, 5);
-        types.put(VariableType.BOOL, null);
-        types.put(VariableType.STRING, true);
-        types.put(VariableType.STRING, 5);
-        types.put(VariableType.STRING, null);
-        types.put(VariableType.INT, true);
-        types.put(VariableType.INT, "str");
-        types.put(VariableType.INT, null);
-        for (VariableType type : types.keySet()) {
+        List<Pair<VariableType, Object>> types = new ArrayList<>();
+        types.add(new ImmutablePair<>(VariableType.BOOL, "str"));
+        types.add(new ImmutablePair<>(VariableType.BOOL, 5));
+        types.add(new ImmutablePair<>(VariableType.BOOL, null));
+        types.add(new ImmutablePair<>(VariableType.STRING, true));
+        types.add(new ImmutablePair<>(VariableType.STRING, 5));
+        types.add(new ImmutablePair<>(VariableType.STRING, null));
+        types.add(new ImmutablePair<>(VariableType.INT, true));
+        types.add(new ImmutablePair<>(VariableType.INT, "str"));
+        types.add(new ImmutablePair<>(VariableType.INT, null));
+        for(Pair<VariableType, Object> p : types) {
             try {
-                createVariable(type, types.get(type));
+                createVariable(p.getLeft(), p.getRight());
                 assertTrue(false);
             } catch (IllegalStateException e) {
+                assertTrue(true);
             }
         }
+    }
+
+    @Test
+    public void validTypes() {
+        createVariable(VariableType.BOOL, true);
+        createVariable(VariableType.INT, 5);
+        createVariable(VariableType.STRING, "foo");
+    }
+
+    @Test(expected = UndefinedVariableException.class)
+    public void updateNonexistentVariableToContext() throws Exception {
+        Variable a = new Variable("foo", 1, VariableType.BOOL, true);
+        Context context = new Context(InputOutput.getInstance());
+        context.updateVariable(a);
     }
 }

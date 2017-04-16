@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package fi.jgke.miniplc.interpreter;
+package fi.jgke.miniplc.unit;
 
-import java.util.Scanner;
+import fi.jgke.miniplc.builder.Builder;
+import fi.jgke.miniplc.builder.Syntax;
+import fi.jgke.miniplc.builder.SyntaxHandlers;
+import org.junit.Test;
 
-public class InputOutput {
-    private final Scanner input;
-
-    private InputOutput() {
-        input = new Scanner(System.in);
-    }
-
-    public static InputOutput getInstance() {
-        return new InputOutput();
-    }
-
-    public String readLine() {
-        return input.nextLine();
-    }
-
-    public void print(Object output) {
-        System.out.println(output);
+public class SyntaxHandlersTest {
+    @Test
+    public void constructor() throws Exception {
+        new SyntaxHandlers();
+        new Builder();
+        new Syntax();
     }
 }

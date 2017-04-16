@@ -163,11 +163,9 @@ public class SyntaxHandlers {
             return handleIntegerOperation(operator, (Integer) left.getValue(), (Integer) right.getValue());
         } else if (left.getType().equals(VariableType.STRING)) {
             return handleStringOperation(operator, (String) left.getValue(), (String) right.getValue());
-        } else if (left.getType().equals(VariableType.BOOL)) {
+        } else {
             return handleBooleanOperation(operator, (Boolean) left.getValue(), (Boolean) right.getValue());
         }
-
-        throw new OperationNotSupportedException(left.getType(), operator);
     }
 
     public static Object handleConstant(List<ConsumedRule> rules, Context context) {
@@ -177,9 +175,8 @@ public class SyntaxHandlers {
             return new Variable(VariableType.INT, token.getContent());
         else if (content instanceof String)
             return new Variable(VariableType.STRING, token.getContent());
-        else if (content instanceof Boolean)
+        else
             return new Variable(VariableType.BOOL, token.getContent());
-        throw new UnsupportedOperationException();
     }
 
     public static Object handleIdentifier(List<ConsumedRule> rules, Context context) {

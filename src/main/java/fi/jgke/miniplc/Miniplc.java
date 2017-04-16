@@ -26,16 +26,16 @@ import java.nio.file.Paths;
 
 public class Miniplc {
 
-    public static void main(String[] args) throws RuntimeException, IOException {
+    public static int app(String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println("Invalid number of arguments: expected one");
-            System.exit(-1);
+            return -1;
         }
 
         File file = new File(args[0]);
         if (!file.exists()) {
             System.err.println("Invalid argument: file not found");
-            System.exit(-1);
+            return -1;
         }
 
         try {
@@ -44,8 +44,13 @@ public class Miniplc {
             executor.execute(InputOutput.getInstance());
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
+            return 1;
         }
+        return 0;
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.exit(app(args));
     }
 
 }

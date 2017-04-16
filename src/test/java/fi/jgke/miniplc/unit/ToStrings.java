@@ -17,6 +17,7 @@
 package fi.jgke.miniplc.unit;
 
 import fi.jgke.miniplc.builder.SimpleConsumedRule;
+import fi.jgke.miniplc.builder.Terminal;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
 import fi.jgke.miniplc.tokenizer.Token;
@@ -44,5 +45,10 @@ public class ToStrings {
         assertThat(new Token(SEMICOLON).toString(), containsString("\n"));
         assertThat(new Token(DO).toString(), containsString("\n"));
         assertThat(new Token(MINUS).toString(), containsString("MINUS"));
+    }
+
+    @Test
+    public void terminal() throws Exception {
+        assertThat(Terminal.And.toString(), containsString("AND"));
     }
 }

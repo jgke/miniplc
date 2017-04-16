@@ -45,6 +45,7 @@ public class BuilderTest {
         TokenQueue tokenQueue = new TokenQueue("var foo : int := 5 + 5;");
 
         Builder.parseAndExecute(tokenQueue, context);
+        assertTrue(tokenQueue.isEmpty());
     }
 
     @Test

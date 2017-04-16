@@ -31,6 +31,5 @@ public class Builder {
                 .execute(context);
         Eos.with(tokenQueue)
                 .consume();
-        assert tokenQueue.isEmpty();
     }
 }
