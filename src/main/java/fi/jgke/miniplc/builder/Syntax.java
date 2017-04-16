@@ -16,6 +16,11 @@
 
 package fi.jgke.miniplc.builder;
 
+import fi.jgke.miniplc.builder.handlers.ExpressionHandlers;
+import fi.jgke.miniplc.builder.handlers.OperandHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementsHandlers;
+
 import static fi.jgke.miniplc.builder.BaseRules.*;
 import static fi.jgke.miniplc.builder.Terminal.*;
 
@@ -25,7 +30,7 @@ public class Syntax {
                 any(
                         rule(
                                 all(statement(), Semicolon, statements()),
-                                SyntaxHandlers::executeStatements),
+                                StatementsHandlers::executeStatements),
                         empty()
                 ));
     }
@@ -35,22 +40,22 @@ public class Syntax {
                 any(
                         rule(
                                 all(Var, Identifier, Colon, Type, maybe(Assign, expression())),
-                                SyntaxHandlers::createVariable),
+                                StatementHandlers::createVariable),
                         rule(
                                 all(Identifier, Assign, expression()),
-                                SyntaxHandlers::updateVariable),
+                                StatementHandlers::updateVariable),
                         rule(
                                 all(Print, expression()),
-                                SyntaxHandlers::printExpression),
+                                StatementHandlers::printExpression),
                         rule(
                                 all(Read, Identifier),
-                                SyntaxHandlers::readVariable),
+                                StatementHandlers::readVariable),
                         rule(
                                 all(Assert, OpenBrace, expression(), CloseBrace),
-                                SyntaxHandlers::assertExpression),
+                                StatementHandlers::assertExpression),
                         rule(
                                 all(For, Identifier, In, expression(), Range, expression(), Do, statements(), End, For),
-                                SyntaxHandlers::forLoop)
+                                StatementHandlers::forLoop)
                 ));
     }
 
@@ -59,10 +64,10 @@ public class Syntax {
                 any(
                         rule(
                                 all(Not, operand()),
-                                SyntaxHandlers::handleNot),
+                                ExpressionHandlers::handleNot),
                         rule(
                                 all(operand(), maybe(operator(), operand())),
-                                SyntaxHandlers::handleOperation)
+                                ExpressionHandlers::handleOperation)
                 ));
     }
 
@@ -75,13 +80,13 @@ public class Syntax {
                 any(
                         rule(
                                 all(any(IntConst, StringConst, BoolConst)),
-                                SyntaxHandlers::handleConstant),
+                                OperandHandlers::handleConstant),
                         rule(
                                 all(Identifier),
-                                SyntaxHandlers::handleIdentifier),
+                                OperandHandlers::handleIdentifier),
                         rule(
                                 all(OpenBrace, expression(), CloseBrace),
-                                SyntaxHandlers::getVariable)
+                                OperandHandlers::handleExpression)
                 ));
     }
 }

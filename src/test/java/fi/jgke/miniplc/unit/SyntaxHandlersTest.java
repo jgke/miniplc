@@ -18,13 +18,20 @@ package fi.jgke.miniplc.unit;
 
 import fi.jgke.miniplc.builder.Builder;
 import fi.jgke.miniplc.builder.Syntax;
-import fi.jgke.miniplc.builder.SyntaxHandlers;
+import fi.jgke.miniplc.builder.handlers.ExpressionHandlers;
+import fi.jgke.miniplc.builder.handlers.OperandHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementsHandlers;
 import org.junit.Test;
 
 public class SyntaxHandlersTest {
     @Test
     public void constructor() throws Exception {
-        new SyntaxHandlers();
+        /* Increase code coverage, run dummy constructors */
+        new ExpressionHandlers();
+        new OperandHandlers();
+        new StatementHandlers();
+        new StatementsHandlers();
         new Builder();
         new Syntax();
     }
