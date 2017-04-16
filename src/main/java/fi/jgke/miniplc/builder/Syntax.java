@@ -21,17 +21,17 @@ import static fi.jgke.miniplc.builder.Terminal.*;
 
 public class Syntax {
     public static Rule statements() {
-        return
+        return lazy(() ->
                 any(
                         rule(
-                                all(statement(), semicolon, lazy(Syntax::statements)),
+                                all(statement(), semicolon, statements()),
                                 (rules, context) -> {
                                     rules.get(0).execute(context);
                                     rules.get(2).execute(context);
                                     return null;
                                 }),
                         empty()
-                );
+                ));
     }
 
     public static Rule statement() {
@@ -53,20 +53,20 @@ public class Syntax {
                                 all(Assert, openBrace, expression(), closeBrace),
                                 SyntaxHandlers::assertExpression),
                         rule(
-                                all(For, identifier, in, expression(), range, expression(), Do, lazy(Syntax::statements), end, For),
+                                all(For, identifier, in, expression(), range, expression(), Do, statements(), end, For),
                                 SyntaxHandlers::forLoop)
                 );
     }
 
     public static Rule expression() {
-        return any(
+        return lazy(() -> any(
                 rule(
                         all(not, operand()),
                         SyntaxHandlers::handleNot),
                 rule(
                         all(operand(), maybe(operator(), operand())),
                         SyntaxHandlers::handleOperation)
-        );
+        ));
     }
 
     public static Rule operator() {
@@ -82,7 +82,7 @@ public class Syntax {
                         all(identifier),
                         SyntaxHandlers::handleIdentifier),
                 rule(
-                        all(openBrace, lazy(Syntax::expression), closeBrace),
+                        all(openBrace, expression(), closeBrace),
                         (rules, context) -> rules.get(1).getVariable(context))
         );
     }
