@@ -15,12 +15,12 @@
  */
 package fi.jgke.miniplc.language;
 
+import fi.jgke.miniplc.builder.Syntax;
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
-import fi.jgke.miniplc.builder.Builder;
 import fi.jgke.miniplc.builder.ConsumedRule;
 import fi.jgke.miniplc.tokenizer.Token;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
@@ -35,7 +35,7 @@ public class ExpressionTest {
     private void testWith(VariableType variableType, Object value, Token... tokens)
             throws RuntimeException {
         Context context = new Context(InputOutput.getInstance());
-        ConsumedRule consume = Builder
+        ConsumedRule consume = Syntax
                 .expression()
                 .with(TokenQueue.of(tokens))
                 .consume();
