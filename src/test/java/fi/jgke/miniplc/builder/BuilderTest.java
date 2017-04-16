@@ -19,14 +19,23 @@ package fi.jgke.miniplc.builder;
 import fi.jgke.miniplc.exception.OperationNotSupportedException;
 import fi.jgke.miniplc.exception.RuntimeException;
 import fi.jgke.miniplc.exception.TypeException;
+import fi.jgke.miniplc.exception.UndefinedVariableException;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.interpreter.InputOutput;
+import fi.jgke.miniplc.tokenizer.Token;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static fi.jgke.miniplc.builder.BaseRules.any;
+import static fi.jgke.miniplc.builder.BaseRules.lazy;
+import static fi.jgke.miniplc.builder.BaseRules.maybe;
+import static fi.jgke.miniplc.tokenizer.TokenValue.SEMICOLON;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class BuilderTest {
 
@@ -48,6 +57,8 @@ public class BuilderTest {
         samples.put("var i : int := (5 + true);", TypeException.class);
         samples.put("var i : int := (true + true);", OperationNotSupportedException.class);
         samples.put("var i : int := (\"foo\" - \"bar\");", OperationNotSupportedException.class);
+        samples.put("i := 5;", UndefinedVariableException.class);
+        samples.put("var a : int; i := 5;", UndefinedVariableException.class);
         InputOutput io = InputOutput.getInstance();
 
         for(String s : samples.keySet()) {
@@ -55,10 +66,30 @@ public class BuilderTest {
                 TokenQueue tokenQueue = new TokenQueue(s);
                 Context context = new Context(io);
                 Builder.parseAndExecute(tokenQueue, context);
-                Assert.assertFalse(true);
+                assertFalse(true);
             } catch(RuntimeException e) {
-                Assert.assertEquals(samples.get(s), e.getClass());
+                assertEquals(samples.get(s), e.getClass());
             }
         }
+    }
+
+    @Test
+    public void lazyMatches() throws Exception {
+        assertTrue(lazy(BaseRules::empty).matches());
+    }
+
+    @Test(expected = RuleNotMatchedException.class)
+    public void anyHasSafeguardForNoneMatched() throws Exception {
+        any(Terminal.and).with(TokenQueue.of(new Token(SEMICOLON))).consume();
+    }
+
+    @Test
+    public void maybeAlwaysMatches() throws Exception {
+        assertTrue(maybe(Terminal.and).with(TokenQueue.of(new Token(SEMICOLON))).matches());
+    }
+
+    @Test
+    public void constructorWorks() throws Exception {
+        new BaseRules();
     }
 }

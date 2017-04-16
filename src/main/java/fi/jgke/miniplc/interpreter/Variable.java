@@ -24,8 +24,7 @@ public class Variable {
     private final int lineNumber;
 
     private boolean typeMatches(VariableType type, Object value) {
-        return value == null
-                || (type.equals(VariableType.INT) && value instanceof Integer)
+        return (type.equals(VariableType.INT) && value instanceof Integer)
                 || (type.equals(VariableType.STRING) && value instanceof String)
                 || (type.equals(VariableType.BOOL) && value instanceof Boolean);
     }

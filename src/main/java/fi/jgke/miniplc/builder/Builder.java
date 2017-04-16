@@ -272,7 +272,7 @@ public class Builder {
             else if (op.equals(TokenValue.DIVIDE)) return new Variable(VariableType.INT, leftValue / rightValue);
             else if (op.equals(TokenValue.LESS_THAN)) return new Variable(VariableType.BOOL, leftValue < rightValue);
             else if (op.equals(TokenValue.EQUALS))
-                return new Variable(VariableType.BOOL, Objects.equals(leftValue, rightValue));
+                return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
         } else if (left.getType().equals(VariableType.STRING)) {
             String leftValue = (String) left.getValue();
             String rightValue = (String) right.getValue();

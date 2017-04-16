@@ -16,13 +16,33 @@
 
 package fi.jgke.miniplc.unit;
 
+import fi.jgke.miniplc.builder.SimpleConsumedRule;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
+import fi.jgke.miniplc.tokenizer.Token;
 import org.junit.Test;
+
+import static fi.jgke.miniplc.tokenizer.TokenValue.DO;
+import static fi.jgke.miniplc.tokenizer.TokenValue.MINUS;
+import static fi.jgke.miniplc.tokenizer.TokenValue.SEMICOLON;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ToStrings {
     @Test
+    public void simpleConsumedRule() throws Exception {
+        new SimpleConsumedRule("foo").toString();
+    }
+
+    @Test
     public void variable() {
-        new Variable(VariableType.BOOL, true);
+        new Variable(VariableType.BOOL, true).toString();
+    }
+
+    @Test
+    public void token() {
+        assertThat(new Token(SEMICOLON).toString(), containsString("\n"));
+        assertThat(new Token(DO).toString(), containsString("\n"));
+        assertThat(new Token(MINUS).toString(), containsString("MINUS"));
     }
 }

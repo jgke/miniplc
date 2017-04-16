@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package fi.jgke.miniplc.builder;
+package fi.jgke.miniplc.unit;
 
-public class SimpleConsumedRule extends ConsumedRule {
-    private final Object content;
+import fi.jgke.miniplc.tokenizer.TokenValue;
+import org.junit.Test;
 
-    public SimpleConsumedRule(Object content) {
-        super(null, (ignored, parameters) -> content);
-        this.content = content;
+public class TokenValueTest {
+    @Test
+    public void values() throws Exception {
+        TokenValue.values();
     }
-
-    @Override
-    public String toString() {
-        return "SimpleConsumedRule{" +
-                "content=" + (content instanceof Terminal ? (Terminal)content : content) +
-                '}';
+    @Test
+    public void valueOf() throws Exception {
+        TokenValue.valueOf("MINUS");
     }
 }

@@ -53,6 +53,13 @@ public class ExpressionTest {
         testWith(VariableType.BOOL, false, op, arg);
     }
 
+    @Test
+    public void parseNot2() throws RuntimeException {
+        Token op = new Token(TokenValue.NOT);
+        Token arg = new Token(TokenValue.BOOL_CONST, false);
+        testWith(VariableType.BOOL, true, op, arg);
+    }
+
     private void test(Object left, TokenValue leftType, TokenValue op, Object right, TokenValue rightType,
                       Object expected, VariableType expectedType) throws RuntimeException {
         Token leftToken = new Token(leftType, left);
@@ -92,6 +99,11 @@ public class ExpressionTest {
     }
 
     @Test
+    public void parseIntegerLessThan2() throws RuntimeException {
+        test(2, TokenValue.INT_CONST, TokenValue.LESS_THAN, 3, TokenValue.INT_CONST, true, VariableType.BOOL);
+    }
+
+    @Test
     public void parseIntegerEquals() throws RuntimeException {
         test(5, TokenValue.INT_CONST, TokenValue.EQUALS, 3, TokenValue.INT_CONST, false, VariableType.BOOL);
     }
@@ -108,7 +120,10 @@ public class ExpressionTest {
 
     @Test
     public void parseBoolAnd() throws RuntimeException {
+        test(false, TokenValue.BOOL_CONST, TokenValue.AND, false, TokenValue.BOOL_CONST, false, VariableType.BOOL);
         test(false, TokenValue.BOOL_CONST, TokenValue.AND, true, TokenValue.BOOL_CONST, false, VariableType.BOOL);
+        test(true, TokenValue.BOOL_CONST, TokenValue.AND, false, TokenValue.BOOL_CONST, false, VariableType.BOOL);
+        test(true, TokenValue.BOOL_CONST, TokenValue.AND, true, TokenValue.BOOL_CONST, true, VariableType.BOOL);
     }
 
     @Test

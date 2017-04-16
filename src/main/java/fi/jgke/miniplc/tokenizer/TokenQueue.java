@@ -49,13 +49,11 @@ public class TokenQueue {
         return tokenQueue;
     }
 
-    public Token getExpectedToken(TokenValue... types) throws UnexpectedTokenException {
+    public Token getExpectedToken(TokenValue type) throws UnexpectedTokenException {
         Token token = this.remove();
-        for (TokenValue type : types) {
-            if (token.getValue().equals(type))
-                return token;
-        }
-        throw new UnexpectedTokenException(token, types);
+        if (token.getValue().equals(type))
+            return token;
+        throw new UnexpectedTokenException(token, type);
     }
 
     private void add(Token token) {
