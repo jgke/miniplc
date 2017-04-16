@@ -37,6 +37,7 @@ public class SyntaxHandlers {
             return new Variable(VariableType.BOOL, token.getContent());
         throw new UnsupportedOperationException();
     }
+
     public static Object handleIdentifier(List<ConsumedRule> rules, Context context) {
         Token token = rules.get(0).getToken();
         return context.getVariable(token.getString(), token.getLineNumber());
@@ -165,37 +166,44 @@ public class SyntaxHandlers {
     }
 
     private static Variable handleOperation(Variable left, Token operator, Variable right) {
-        TokenValue op = operator.getValue();
-
         if (!left.getType().equals(right.getType())) {
             throw new TypeException(operator.getLineNumber(), left.getType(), right.getType());
         }
 
         if (left.getType().equals(VariableType.INT)) {
-            Integer leftValue = (Integer) left.getValue();
-            Integer rightValue = (Integer) right.getValue();
-
-            if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.INT, leftValue + rightValue);
-            else if (op.equals(TokenValue.MINUS)) return new Variable(VariableType.INT, leftValue - rightValue);
-            else if (op.equals(TokenValue.TIMES)) return new Variable(VariableType.INT, leftValue * rightValue);
-            else if (op.equals(TokenValue.DIVIDE)) return new Variable(VariableType.INT, leftValue / rightValue);
-            else if (op.equals(TokenValue.LESS_THAN)) return new Variable(VariableType.BOOL, leftValue < rightValue);
-            else if (op.equals(TokenValue.EQUALS))
-                return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
+            return handleIntegerOperation(operator, (Integer) left.getValue(), (Integer) right.getValue());
         } else if (left.getType().equals(VariableType.STRING)) {
-            String leftValue = (String) left.getValue();
-            String rightValue = (String) right.getValue();
-
-            if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.STRING, leftValue + rightValue);
-            else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
+            return handleStringOperation(operator, (String) left.getValue(), (String) right.getValue());
         } else if (left.getType().equals(VariableType.BOOL)) {
-            Boolean leftValue = (Boolean) left.getValue();
-            Boolean rightValue = (Boolean) right.getValue();
-
-            if (op.equals(TokenValue.AND)) return new Variable(VariableType.BOOL, leftValue && rightValue);
-            else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, leftValue.equals(rightValue));
+            return handleBooleanOperation(operator, (Boolean) left.getValue(), (Boolean) right.getValue());
         }
 
         throw new OperationNotSupportedException(left.getType(), operator);
+    }
+
+    private static Variable handleIntegerOperation(Token operator, Integer left, Integer right) {
+        TokenValue op = operator.getValue();
+        if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.INT, left + right);
+        else if (op.equals(TokenValue.MINUS)) return new Variable(VariableType.INT, left - right);
+        else if (op.equals(TokenValue.TIMES)) return new Variable(VariableType.INT, left * right);
+        else if (op.equals(TokenValue.DIVIDE)) return new Variable(VariableType.INT, left / right);
+        else if (op.equals(TokenValue.LESS_THAN)) return new Variable(VariableType.BOOL, left < right);
+        else if (op.equals(TokenValue.EQUALS))
+            return new Variable(VariableType.BOOL, left.equals(right));
+        throw new OperationNotSupportedException(VariableType.INT, operator);
+    }
+
+    private static Variable handleStringOperation(Token operator, String left, String right) {
+        TokenValue op = operator.getValue();
+        if (op.equals(TokenValue.PLUS)) return new Variable(VariableType.STRING, left + right);
+        else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, left.equals(right));
+        throw new OperationNotSupportedException(VariableType.STRING, operator);
+    }
+
+    private static Variable handleBooleanOperation(Token operator, Boolean left, Boolean right) {
+        TokenValue op = operator.getValue();
+        if (op.equals(TokenValue.AND)) return new Variable(VariableType.BOOL, left && right);
+        else if (op.equals(TokenValue.EQUALS)) return new Variable(VariableType.BOOL, left.equals(right));
+        throw new OperationNotSupportedException(VariableType.BOOL, operator);
     }
 }
