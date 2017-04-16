@@ -20,7 +20,7 @@ import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 
 import static fi.jgke.miniplc.builder.Syntax.statements;
-import static fi.jgke.miniplc.builder.Terminal.eos;
+import static fi.jgke.miniplc.builder.Terminal.Eos;
 
 public class Builder {
 
@@ -29,7 +29,7 @@ public class Builder {
                 .with(tokenQueue)
                 .consume()
                 .execute(context);
-        eos.with(tokenQueue)
+        Eos.with(tokenQueue)
                 .consume();
         assert tokenQueue.isEmpty();
     }

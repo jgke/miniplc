@@ -24,7 +24,7 @@ public class Syntax {
         return lazy(() ->
                 any(
                         rule(
-                                all(statement(), semicolon, statements()),
+                                all(statement(), Semicolon, statements()),
                                 (rules, context) -> {
                                     rules.get(0).execute(context);
                                     rules.get(2).execute(context);
@@ -38,22 +38,22 @@ public class Syntax {
         return
                 any(
                         rule(
-                                all(var, identifier, colon, type, maybe(assign, expression())),
+                                all(Var, Identifier, Colon, Type, maybe(Assign, expression())),
                                 SyntaxHandlers::createVariable),
                         rule(
-                                all(identifier, assign, expression()),
+                                all(Identifier, Assign, expression()),
                                 SyntaxHandlers::updateVariable),
                         rule(
-                                all(print, expression()),
+                                all(Print, expression()),
                                 SyntaxHandlers::printExpression),
                         rule(
-                                all(read, identifier),
+                                all(Read, Identifier),
                                 SyntaxHandlers::readVariable),
                         rule(
-                                all(Assert, openBrace, expression(), closeBrace),
+                                all(Assert, OpenBrace, expression(), CloseBrace),
                                 SyntaxHandlers::assertExpression),
                         rule(
-                                all(For, identifier, in, expression(), range, expression(), Do, statements(), end, For),
+                                all(For, Identifier, In, expression(), Range, expression(), Do, statements(), End, For),
                                 SyntaxHandlers::forLoop)
                 );
     }
@@ -61,7 +61,7 @@ public class Syntax {
     public static Rule expression() {
         return lazy(() -> any(
                 rule(
-                        all(not, operand()),
+                        all(Not, operand()),
                         SyntaxHandlers::handleNot),
                 rule(
                         all(operand(), maybe(operator(), operand())),
@@ -70,19 +70,19 @@ public class Syntax {
     }
 
     public static Rule operator() {
-        return any(plus, minus, times, divide, lessThan, equals, and);
+        return any(Plus, Minus, Times, Divide, LessThan, Equals, And);
     }
 
     public static Rule operand() {
         return any(
                 rule(
-                        all(any(intConst, stringConst, boolConst)),
+                        all(any(IntConst, StringConst, BoolConst)),
                         SyntaxHandlers::handleConstant),
                 rule(
-                        all(identifier),
+                        all(Identifier),
                         SyntaxHandlers::handleIdentifier),
                 rule(
-                        all(openBrace, expression(), closeBrace),
+                        all(OpenBrace, expression(), CloseBrace),
                         (rules, context) -> rules.get(1).getVariable(context))
         );
     }

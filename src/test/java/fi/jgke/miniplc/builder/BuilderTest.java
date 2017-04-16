@@ -80,12 +80,12 @@ public class BuilderTest {
 
     @Test(expected = RuleNotMatchedException.class)
     public void anyHasSafeguardForNoneMatched() throws Exception {
-        any(Terminal.and).with(TokenQueue.of(new Token(SEMICOLON))).consume();
+        any(Terminal.And).with(TokenQueue.of(new Token(SEMICOLON))).consume();
     }
 
     @Test
     public void maybeAlwaysMatches() throws Exception {
-        assertTrue(maybe(Terminal.and).with(TokenQueue.of(new Token(SEMICOLON))).matches());
+        assertTrue(maybe(Terminal.And).with(TokenQueue.of(new Token(SEMICOLON))).matches());
     }
 
     @Test
