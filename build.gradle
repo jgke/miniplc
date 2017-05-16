@@ -1,10 +1,22 @@
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: "jacoco"
+apply plugin: "info.solidsoft.pitest"
 
 repositories {
     jcenter()
     mavenCentral()
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+        //Needed only for SNAPSHOT versions
+        //maven { url "http://oss.sonatype.org/content/repositories/snapshots/" }
+    }
+    dependencies {
+        classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.6'
+    }
 }
 
 dependencies {
@@ -25,6 +37,10 @@ jacocoTestReport {
 task applicationCodeCoverageReport(type:JacocoReport){
     executionData run
     sourceSets sourceSets.main
+}
+
+pitest {
+    targetClasses = ['fi.jgke.miniplc.*']
 }
 
 mainClassName = 'fi.jgke.miniplc.Miniplc'
