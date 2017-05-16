@@ -96,10 +96,7 @@ public class ExpressionTest {
     @Test
     public void parseIntegerLessThan() throws RuntimeException {
         test(5, TokenValue.INT_CONST, TokenValue.LESS_THAN, 3, TokenValue.INT_CONST, false, VariableType.BOOL);
-    }
-
-    @Test
-    public void parseIntegerLessThan2() throws RuntimeException {
+        test(3, TokenValue.INT_CONST, TokenValue.LESS_THAN, 3, TokenValue.INT_CONST, false, VariableType.BOOL);
         test(2, TokenValue.INT_CONST, TokenValue.LESS_THAN, 3, TokenValue.INT_CONST, true, VariableType.BOOL);
     }
 

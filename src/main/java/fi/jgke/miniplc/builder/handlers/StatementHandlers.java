@@ -26,6 +26,7 @@ import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class StatementHandlers {
     public static Object createVariable(List<ConsumedRule> rules, Context context) {
@@ -130,7 +131,7 @@ public class StatementHandlers {
     }
 
     private static void executeLoopBody(Context context, int endLineNumber, String loopVariableName, Integer start, Integer end, ConsumedRule loopBody) {
-        for (Integer i = start; i <= end; i++) {
+        IntStream.range(start, end+1).forEach(i -> {
             context.pushFrame();
             Variable loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, i);
             context.updateVariable(loopVariable);
@@ -138,7 +139,7 @@ public class StatementHandlers {
             loopBody.execute(context);
 
             context.popFrame();
-        }
+        });
         // Because specification's for loop example
         context.updateVariable(new Variable(loopVariableName, endLineNumber, VariableType.INT, end+1));
 

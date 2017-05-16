@@ -169,4 +169,14 @@ public class Examples {
     public void duplicateVariables() {
         new Executor("var a : int; var a : int;").execute(inputOutput);
     }
+
+    @Test(expected = UndefinedVariableException.class)
+    public void variablesAreDestroyedWhenOutOfScope() {
+        new Executor("" +
+                "     for i in 1..n do \n" +
+                "         v := v * i;\n" +
+                "     end for;\n" +
+                "     print i;\n" +
+                "").execute(inputOutput);
+    }
 }
