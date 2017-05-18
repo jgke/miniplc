@@ -29,11 +29,15 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class StatementHandlers {
+    /**
+     * Create a variable with a name, type and an optional value, and add it to the execution context
+     */
     public static Object createVariable(List<ConsumedRule> rules, Context context) {
         int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(1).getToken().getString();
         VariableType type = rules.get(3).getToken().getVariableType();
         List<ConsumedRule> value = rules.get(4).getList();
+
         Variable variable;
         if (!value.isEmpty()) {
             variable = new Variable(name, linenumber, type, value.get(1).getVariable(context).getValue());
@@ -41,9 +45,13 @@ public class StatementHandlers {
             variable = new Variable(name, linenumber, type);
         }
         context.addVariable(variable);
+
         return null;
     }
 
+    /**
+     * Set a new value to a variable, and update it to the execution context
+     */
     public static Object updateVariable(List<ConsumedRule> rules, Context context) {
         int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(0).getToken().getString();
@@ -53,12 +61,18 @@ public class StatementHandlers {
         return null;
     }
 
+    /**
+     * Print an expression's value to the standard output
+     */
     public static Object printExpression(List<ConsumedRule> rules, Context context) {
         Variable output = rules.get(1).getVariable(context);
         context.print(output.getValue());
         return null;
     }
 
+    /**
+     * Read a variable from the standard input, and add it to the execution context
+     */
     public static Object readVariable(List<ConsumedRule> rules, Context context) {
         int linenumber = rules.get(0).getToken().getLineNumber();
         String name = rules.get(1).getToken().getString();
@@ -98,6 +112,7 @@ public class StatementHandlers {
         return variable;
     }
 
+    /* Assert that the expression is true */
     public static Object assertExpression(List<ConsumedRule> rules, Context context) {
         int linenumber = rules.get(0).getToken().getLineNumber();
         Variable variable = rules.get(2).getVariable(context);
@@ -110,6 +125,7 @@ public class StatementHandlers {
         return null;
     }
 
+    /* Run a for loop */
     public static Object forLoop(List<ConsumedRule> rules, Context context) {
         int loopVariableLineNumber = rules.get(2).getToken().getLineNumber();
         String loopVariableName = rules.get(1).getToken().getString();
@@ -126,22 +142,24 @@ public class StatementHandlers {
     private static Integer getLoopRangeLimit(List<ConsumedRule> rules, Context context, int index) {
         Variable startVariable = rules.get(index).getVariable(context);
         if (!startVariable.getType().equals(VariableType.INT))
-            throw new TypeException(rules.get(index-1).getToken().getLineNumber(), VariableType.INT, startVariable.getType());
+            throw new TypeException(rules.get(index - 1).getToken().getLineNumber(), VariableType.INT, startVariable.getType());
         return (Integer) startVariable.getValue();
     }
 
     private static void executeLoopBody(Context context, int endLineNumber, String loopVariableName, Integer start, Integer end, ConsumedRule loopBody) {
-        IntStream.range(start, end+1).forEach(i -> {
+        IntStream.range(start, end + 1).forEach(i -> {
+            /* Push a frame, so that the inner variables don't leak */
             context.pushFrame();
             Variable loopVariable = new Variable(loopVariableName, endLineNumber, VariableType.INT, i);
             context.updateVariable(loopVariable);
 
             loopBody.execute(context);
 
+            /* and pop the frame to remove the variables from the context */
             context.popFrame();
         });
-        // Because specification's for loop example
-        context.updateVariable(new Variable(loopVariableName, endLineNumber, VariableType.INT, end+1));
+        // Because specification's for loop example - leak the loop variable
+        context.updateVariable(new Variable(loopVariableName, endLineNumber, VariableType.INT, end + 1));
 
     }
 }

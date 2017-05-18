@@ -25,6 +25,8 @@ import fi.jgke.miniplc.tokenizer.Token;
 import java.util.List;
 
 public class OperandHandlers {
+
+    /* Get a constant such as 5, true or "foo" */
     public static Object handleConstant(List<ConsumedRule> rules, Context context) {
         Token token = rules.get(0).getToken();
         Object content = token.getContent();
@@ -36,11 +38,13 @@ public class OperandHandlers {
             return new Variable(VariableType.BOOL, token.getContent());
     }
 
+    /* Get any lone variable */
     public static Object handleIdentifier(List<ConsumedRule> rules, Context context) {
         Token token = rules.get(0).getToken();
         return context.getVariable(token.getString(), token.getLineNumber());
     }
 
+    /* handle (expression) */
     public static Object handleExpression(List<ConsumedRule> rules, Context context) {
         return rules.get(1).getVariable(context);
     }

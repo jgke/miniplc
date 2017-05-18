@@ -24,7 +24,14 @@ import fi.jgke.miniplc.builder.handlers.StatementsHandlers;
 import static fi.jgke.miniplc.builder.BaseRules.*;
 import static fi.jgke.miniplc.builder.Terminal.*;
 
+/**
+ * Syntax definitions for the language
+ */
 public class Syntax {
+    /*
+     * <statements> ::= <statement> ";" <statements>
+     *               |  epsilon
+     */
     public static Rule statements() {
         return lazy(() ->
                 any(
@@ -35,6 +42,15 @@ public class Syntax {
                 ));
     }
 
+    /*
+     * <statement> ::=  "var" <identifier> ":" <type> [":=" <expression>]
+     *              |     <identifier> ":=" <expression>
+     *              |     "for" <identifier> "in" <expression> ".." <expression> "do"
+     *                       <statements> "end" "for"
+     *              |     "read" <identifier>
+     *              |     "print" <expression>
+     *              |     "assert" "(" <expression> ")"
+     */
     public static Rule statement() {
         return lazy(() ->
                 any(
@@ -59,6 +75,11 @@ public class Syntax {
                 ));
     }
 
+    /*
+     *
+     * <expression> ::= <unaryOperator> <operand>
+     *               | <operand> [<binaryOperator> <operand>]
+     */
     public static Rule expression() {
         return lazy(() ->
                 any(
@@ -71,10 +92,18 @@ public class Syntax {
                 ));
     }
 
+    /*
+     * operator ::= "+" | "-" | "*" | "/" | "<" | "=" | "&"
+     */
     public static Rule operator() {
         return any(Plus, Minus, Times, Divide, LessThan, Equals, And);
     }
 
+    /*
+     * <operand> ::=  <intConstant> | <stringConstant> | <boolConstant>
+     *            |   <identifier>
+     *            |   "(" expr ")"
+     */
     public static Rule operand() {
         return lazy(() ->
                 any(

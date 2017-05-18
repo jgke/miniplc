@@ -17,11 +17,16 @@
 package fi.jgke.miniplc.builder.handlers;
 
 import fi.jgke.miniplc.builder.ConsumedRule;
+import fi.jgke.miniplc.builder.Syntax;
 import fi.jgke.miniplc.interpreter.Context;
 
 import java.util.List;
 
 public class StatementsHandlers {
+    /**
+     * Execute statements
+     * @see Syntax
+     */
     public static Object executeStatements(List<ConsumedRule> rules, Context context) {
         rules.get(0).execute(context);
         rules.get(2).execute(context);

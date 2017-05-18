@@ -28,6 +28,7 @@ import fi.jgke.miniplc.tokenizer.TokenValue;
 import java.util.List;
 
 public class ExpressionHandlers {
+    /* Get the second token as a variable, and return it's negation */
     public static Object handleNot(List<ConsumedRule> rules, Context context) {
         Variable variable = rules.get(1).getVariable(context);
         if (!variable.getType().equals(VariableType.BOOL)) {
@@ -37,6 +38,8 @@ public class ExpressionHandlers {
         return new Variable(VariableType.BOOL, !value);
     }
 
+    /* Handle a operation such as 1 + 2, !2, "foo" + "bar" etc.
+     * Also handles lone variables as identity operations */
     public static Object handleOperation(List<ConsumedRule> rules, Context context) {
         Variable left = rules.get(0).getVariable(context);
         List<ConsumedRule> b = rules.get(1).getList();
@@ -48,6 +51,7 @@ public class ExpressionHandlers {
         return left;
     }
 
+    /* Handle a binary operation such as 1 + 2 or "foo" + "bar" */
     private static Object handleBinaryOperation(Variable left, Token operator, Variable right) {
         if (!left.getType().equals(right.getType())) {
             throw new TypeException(operator.getLineNumber(), left.getType(), right.getType());
