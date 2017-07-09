@@ -1,0 +1,29 @@
+- Diagram from IDEA
+
+- Write a report on the assignment, as a document in PDF format.
+- The title page of the document must show appropriate identifications:
+    - the name of the student
+    - the name of the course
+    - the name of the project
+    - and the valid date and time of delivery.
+
+Describe the overall architecture of your language processor with, e.g.,
+    - UML diagrams.
+    - Explain your diagrams.
+    - Clearly describe yout testing, and the design of test data.
+    - Tell about possible shortcomings of your program
+        (if well documented they might be partly forgiven).
+    - Give instructions how to build and run your interpreter.
+
+The report must include the following parts
+    - The Mini-PL token patterns as regular expressions or, alternatively, as regular definitions.
+    - A modified context-free grammar suitable for recursive-descent parsing
+        (eliminating any LL(1) violations);
+    - Specify abstract syntax trees (AST), i.e., the internal representation for Mini-PL programs;
+        you can use UML diagrams or alternatively give a syntax-based definition of the abstract syntax.
+    - Error handling approach and solutions used in your Mini-PL implementation
+        (in its scanner, parser, semantic analyzer, and interpreter).
+    - For completeness, include the original project definition and the
+        Mini-PL specification as appendices of your document;
+        you can refer to them when explaining your solutions.
+

@@ -1,1 +1,1 @@
-print "Hello world!";
+print foo "Hello world!";
