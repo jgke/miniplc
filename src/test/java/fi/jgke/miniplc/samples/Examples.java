@@ -151,7 +151,7 @@ public class Examples {
 
     @Test(expected = UnexpectedTokenException.class)
     public void unexpectedToken() {
-        new Executor(";;").execute(inputOutput);
+        new Executor("var a : int;;").execute(inputOutput);
     }
 
     @Test(expected = UninitializedVariableException.class)

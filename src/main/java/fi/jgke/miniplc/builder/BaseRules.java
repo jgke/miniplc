@@ -52,25 +52,6 @@ public class BaseRules {
         };
     }
 
-    public static Rule maybe(Rule... rules) {
-        return new Rule() {
-            @Override
-            public boolean matches() {
-                return true;
-            }
-
-            public ConsumedRule consume() {
-                boolean ruleMatches = rules[0].with(tokenQueue).matches();
-                List<ConsumedRule> consumedRules = Arrays.stream(rules)
-                        .map(rule -> rule.with(tokenQueue))
-                        .filter((__) -> ruleMatches)
-                        .map(Rule::consume)
-                        .collect(Collectors.toList());
-                return new SimpleConsumedRule(consumedRules);
-            }
-        };
-    }
-
     public static Rule any(Rule... rules) {
         return new Rule() {
             @Override
@@ -106,16 +87,16 @@ public class BaseRules {
         };
     }
 
-    public static Rule rule(Rule when, Do something) {
+    public static Rule rule(Do something, Rule ...when) {
         return new Rule() {
             @Override
             public boolean matches() {
-                return when.with(tokenQueue).matches();
+                return all(when).with(tokenQueue).matches();
             }
 
             @Override
             public ConsumedRule consume() {
-                return new ConsumedRule(when.with(tokenQueue).consume().getList(), something);
+                return new ConsumedRule(all(when).with(tokenQueue).consume().getList(), something);
             }
         };
     }

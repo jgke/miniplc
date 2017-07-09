@@ -34,6 +34,6 @@ public class InputOutput {
     }
 
     public void print(Object output) {
-        System.out.println(output);
+        System.out.print(output);
     }
 }

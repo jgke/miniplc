@@ -31,7 +31,6 @@ import java.util.Map;
 
 import static fi.jgke.miniplc.builder.BaseRules.any;
 import static fi.jgke.miniplc.builder.BaseRules.lazy;
-import static fi.jgke.miniplc.builder.BaseRules.maybe;
 import static fi.jgke.miniplc.tokenizer.TokenValue.SEMICOLON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -74,6 +73,13 @@ public class BuilderTest {
         }
     }
 
+    @Test(expected = RuntimeException.class)
+    public void emptyProgramIsInvalid() {
+        Context context = new Context(InputOutput.getInstance());
+        TokenQueue tokenQueue = new TokenQueue("");
+        Builder.parseAndExecute(tokenQueue, context);
+    }
+
     @Test
     public void lazyMatches() throws Exception {
         assertTrue(lazy(BaseRules::empty).matches());
@@ -82,11 +88,6 @@ public class BuilderTest {
     @Test(expected = RuleNotMatchedException.class)
     public void anyHasSafeguardForNoneMatched() throws Exception {
         any(Terminal.And).with(TokenQueue.of(new Token(SEMICOLON))).consume();
-    }
-
-    @Test
-    public void maybeAlwaysMatches() throws Exception {
-        assertTrue(maybe(Terminal.And).with(TokenQueue.of(new Token(SEMICOLON))).matches());
     }
 
     @Test

@@ -19,13 +19,14 @@ package fi.jgke.miniplc.builder;
 import fi.jgke.miniplc.interpreter.Context;
 import fi.jgke.miniplc.tokenizer.TokenQueue;
 
+import static fi.jgke.miniplc.builder.Syntax.program;
 import static fi.jgke.miniplc.builder.Syntax.statements;
 import static fi.jgke.miniplc.builder.Terminal.Eos;
 
 public class Builder {
 
     public static void parseAndExecute(TokenQueue tokenQueue, Context context) {
-        statements()
+        program()
                 .with(tokenQueue)
                 .consume()
                 .execute(context);
