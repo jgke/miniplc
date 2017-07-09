@@ -21,36 +21,37 @@ import fi.jgke.miniplc.interpreter.InputOutput;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Miniplc {
 
-    public static int app(String[] args) throws IOException {
+    public static int app(String[] args, PrintStream out, PrintStream err) throws IOException {
         if (args.length != 1) {
-            System.err.println("Invalid number of arguments: expected one");
+            err.println("Invalid number of arguments: expected one");
             return -1;
         }
 
         File file = new File(args[0]);
         if (!file.exists()) {
-            System.err.println("Invalid argument: file not found");
+            err.println("Invalid argument: file not found");
             return -1;
         }
 
         try {
             String content = new String(Files.readAllBytes(Paths.get(args[0])));
             Executor executor = new Executor(content);
-            executor.execute(InputOutput.getInstance());
+            executor.execute(new InputOutput(out));
         } catch (RuntimeException e) {
-            System.err.println(e.getMessage());
+            err.println(e.getMessage());
             return 1;
         }
         return 0;
     }
 
     public static void main(String[] args) throws IOException {
-        System.exit(app(args));
+        System.exit(app(args, System.out, System.err));
     }
 
 }

@@ -16,17 +16,20 @@
 
 package fi.jgke.miniplc.interpreter;
 
+import java.io.PrintStream;
 import java.util.Scanner;
 
 public class InputOutput {
     private final Scanner input;
+    private final PrintStream output;
 
-    private InputOutput() {
+    public InputOutput(PrintStream out) {
         input = new Scanner(System.in);
+        output = out;
     }
 
     public static InputOutput getInstance() {
-        return new InputOutput();
+        return new InputOutput(System.out);
     }
 
     public String readLine() {
@@ -34,6 +37,6 @@ public class InputOutput {
     }
 
     public void print(Object output) {
-        System.out.print(output);
+        this.output.print(output);
     }
 }

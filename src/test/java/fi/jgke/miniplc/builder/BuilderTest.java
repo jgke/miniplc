@@ -53,6 +53,7 @@ public class BuilderTest {
         samples.put("print !5;", OperationNotSupportedException.class);
         samples.put("for i in true..5 do print i; end for;", TypeException.class);
         samples.put("for i in 5..true do print i; end for;", TypeException.class);
+        samples.put("for i in 1..2 do var x : int := 5; end for; print x;", UndefinedVariableException.class);
         samples.put("assert(5);", TypeException.class);
         samples.put("var i : int := (5 + true);", TypeException.class);
         samples.put("var i : int := (true + true);", OperationNotSupportedException.class);

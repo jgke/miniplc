@@ -18,12 +18,14 @@ package fi.jgke.miniplc;
 
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 public class MainTest {
 
@@ -33,9 +35,12 @@ public class MainTest {
         try (OutputStream s = Files.newOutputStream(p.toAbsolutePath())) {
             s.write("print \"hello world\";".getBytes());
             s.close();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(outputStream);
             String[] args = {p.toAbsolutePath().toString()};
-            int status = Miniplc.app(args);
+            int status = Miniplc.app(args, ps, null);
             assertEquals(status, 0);
+            assertTrue(outputStream.toString().contains("hello world"));
         } finally {
             Files.delete(p);
         }
@@ -43,14 +48,20 @@ public class MainTest {
 
     @Test
     public void testNonexistentFile() throws Exception {
-        int status = Miniplc.app(new String[]{"/nonexistent/file"});
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(outputStream);
+        int status = Miniplc.app(new String[]{"/nonexistent/file"}, null, ps);
         assertNotEquals(status, 0);
+        assertTrue(outputStream.toString().contains("file not found"));
     }
 
     @Test
     public void testNoArguments() throws Exception {
-        int status = Miniplc.app(new String[]{});
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(outputStream);
+        int status = Miniplc.app(new String[]{}, null, ps);
         assertNotEquals(status, 0);
+        assertTrue(outputStream.toString().contains("Invalid number of arguments"));
     }
 
     @Test
@@ -61,8 +72,11 @@ public class MainTest {
             s.close();
             String[] args = {p.toAbsolutePath().toString()};
 
-            int status = Miniplc.app(args);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(outputStream);
+            int status = Miniplc.app(args,null, ps);
             assertNotEquals(status, 0);
+            assertTrue(outputStream.toString().contains("Unexpected token"));
         } finally {
             Files.delete(p);
         }

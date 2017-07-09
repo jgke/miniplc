@@ -173,10 +173,23 @@ public class Examples {
     @Test(expected = UndefinedVariableException.class)
     public void variablesAreDestroyedWhenOutOfScope() {
         new Executor("" +
-                "     for i in 1..n do \n" +
-                "         v := v * i;\n" +
-                "     end for;\n" +
-                "     print i;\n" +
-                "").execute(inputOutput);
+                             "     var i : int; \n" +
+                             "     for i in 1..5 do \n" +
+                             "         var x : int := i;\n" +
+                             "     end for;\n" +
+                             "     print x;\n" +
+                             "").execute(inputOutput);
+    }
+
+    @Test
+    public void outerVariablesCanBeUsed() {
+        new Executor("" +
+                             "     var x : int := 5; \n" +
+                             "     var i : int; \n" +
+                             "     for i in 1..5 do \n " +
+                             "         print(x);\n" +
+                             "     end for;\n" +
+                             "     print i;\n" +
+                             "").execute(inputOutput);
     }
 }
