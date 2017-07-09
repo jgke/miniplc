@@ -89,9 +89,4 @@ public class BuilderTest {
     public void anyHasSafeguardForNoneMatched() throws Exception {
         any(Terminal.And).with(TokenQueue.of(new Token(SEMICOLON))).consume();
     }
-
-    @Test
-    public void constructorWorks() throws Exception {
-        new BaseRules();
-    }
 }

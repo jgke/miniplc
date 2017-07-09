@@ -1,23 +1,11 @@
-/*
- * Copyright 2017 Jaakko Hannikainen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package fi.jgke.miniplc.misc;
 
-package fi.jgke.miniplc.unit;
-
-import fi.jgke.miniplc.builder.SimpleConsumedRule;
-import fi.jgke.miniplc.builder.Terminal;
+import fi.jgke.miniplc.Miniplc;
+import fi.jgke.miniplc.builder.*;
+import fi.jgke.miniplc.builder.handlers.ExpressionHandlers;
+import fi.jgke.miniplc.builder.handlers.OperandHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementHandlers;
+import fi.jgke.miniplc.builder.handlers.StatementsHandlers;
 import fi.jgke.miniplc.interpreter.Variable;
 import fi.jgke.miniplc.interpreter.VariableType;
 import fi.jgke.miniplc.tokenizer.Token;
@@ -29,7 +17,21 @@ import static fi.jgke.miniplc.tokenizer.TokenValue.SEMICOLON;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ToStrings {
+/* Tests that purely increase code coverage */
+public class CoverageTests {
+    @Test
+    public void constructorWorks() throws Exception {
+        /* Increase code coverage, run dummy constructors */
+        new BaseRules();
+        new ExpressionHandlers();
+        new OperandHandlers();
+        new StatementHandlers();
+        new StatementsHandlers();
+        new Builder();
+        new Syntax();
+        new Miniplc();
+    }
+
     @Test
     public void simpleConsumedRule() throws Exception {
         new SimpleConsumedRule("foo").toString();

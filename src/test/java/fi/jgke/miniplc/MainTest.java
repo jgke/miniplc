@@ -67,9 +67,4 @@ public class MainTest {
             Files.delete(p);
         }
     }
-
-    @Test
-    public void constructor() throws Exception {
-        new Miniplc();
-    }
 }
