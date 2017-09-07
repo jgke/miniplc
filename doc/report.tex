@@ -15,7 +15,7 @@
 
 \noindent
 \begin{minipage}{0.49\textwidth}
-\begin{minted}{text}
+\begin{minted}{python}
 var nTimes : int := 0;
 print "How many times? ";
 read nTimes;
@@ -40,7 +40,12 @@ $
 \end{minted}
 \end{minipage}
 
+\vfill
+
 \section{Introduction}
+Miniplc is an interpreter for the MiniPL programming language. \\[1.5em]
+
+\noindent
 Basic usage:
 \begin{minted}{shell}
     ./gradlew jar
@@ -50,11 +55,15 @@ Basic usage:
 \noindent
 Running tests:
 \begin{minted}{shell}
-    ./gradlew test # normal unit tests
-    ./gradlew pitest # unit tests with mutation tests
+    ./gradlew test # normal tests
+    ./gradlew pitest # mutation tests
 \end{minted}
 
+\vfill
+
+\newpage
 \section{Architecture}
+\label{sec:architecture}
 The interpreter has a simple multi-pass design, first the program is tokenized,
 and then resulting token stream is parsed using a simple grammar. The resulting
 tree is then executed.
@@ -67,34 +76,43 @@ tree parser, located in the package fi.jgke.miniplc.builder. The parser is
 trivially modifiable to enable parsing LL(k) grammars, but in the case of this
 language, only LL(1) features are used.
 
-\newpage
-
 The syntax of the language is handled using a simple Java-based DSL, located in
 fi.jgke.miniplc.builder.Syntax.
 
 \begin{minted}{Java}
 /*
- * <expression> ::= <unaryOperator> <operand>
- *               | <operand> [<binaryOperator> <operand>]
+ * <operand> ::=  <intConstant> | <stringConstant> | <boolConstant>
+ *            |   <identifier>
+ *            |   "(" expr ")"
  */
-public static Rule expression() {
+public static Rule operand() {
     return lazy(() -> any(
-            rule(ExpressionHandlers::handleNot,
-                 Not, operand()),
-            rule(ExpressionHandlers::handleOperation,
-                 operand(), maybe(operator(), operand()))
+            rule(OperandHandlers::handleConstant,
+                 any(IntConst, StringConst, BoolConst)),
+            rule(OperandHandlers::handleIdentifier,
+                 Identifier),
+            rule(OperandHandlers::handleExpression,
+                 OpenBrace, expression(), CloseBrace)
     ));
 }
 \end{minted}
 
-The above example is the parse rules for expressions. The rule states that an
-expression is a token stream which either begins with a "not" or any operand.
-The tree is then parsed: if the topmost token is "not", then it is taken off
-the token stream, and an operand is parsed. Otherwise, an operand is parsed,
-and if the token stream follows with an operator, a second operand is also
-parsed. If neither of these is true, an exception is thrown. When the parsing
-is complete, the token list is passed to the handler, in this case, either
-handleNot or handleOperation.
+The above example is the parse rule for operands. The rule states that an
+operand is a token stream which either
+
+\begin{itemize}
+    \item is any of: IntConst (eg. 5), StringConst (eg. "foo") or BoolConst
+        (eg. true),
+    \item is an identifier (any string sequence which is not a keyword) or
+    \item starts with a open brace '(' and contains an expression which is
+        followed by a close brace ')'.
+\end{itemize}
+\noindent
+If none of these is true, an exception is thrown. \\
+
+The tree is then parsed: if the topmost token is any constant or identifier,
+it is taken off the token stream and passed to the handler - either handleConstant or handleIdentifier.
+Otherwise, an expression is parsed, and passed to the handler.
 
 \FloatBarrier
 \begin{figure}[ht!]
@@ -102,13 +120,49 @@ handleNot or handleOperation.
         \makebox[\textwidth]{
             \includegraphics[width=\paperwidth]{diagram}}
     \end{center}
-    \caption{Simplified UML diagram, generated using IntelliJ IDEA.}
+    \caption{Simplified UML-like diagram, generated using IntelliJ IDEA.}
     \label{fig:uml}
 \end{figure}
 \FloatBarrier
 
+The control flow is simple: First the program is passed (as a String) to
+the Tokenizer through creating a new TokenQueue. When the parsing is done, the
+list of tokens is passed to the topmost rule in Builder: program(). There the
+recursive-descent parser passes the queue around to different rules. When rule
+consumes tokens from a token queue, it converts to a ConsumedRule, which are
+handled by the parent rules.
+
+Alongside the token queue, a Context is passed, which handles currently
+available variables, variable scoping and input/output.
+
 \section{Testing}
-The interpreter has a comprehensive automatic test suite.
+The interpreter has a comprehensive automatic test suite. It testes various
+aspects of the interpreter, ranging from unit tests testing single functions to
+running sample programs. Tests are implemented usin Junit 4, Mockito and
+Hamcrest. Many of the tests mock Input and Output in order to test read and
+print functionalities. The tests are organized under ./src/test. The packages
+are as follows:
+
+\begin{description}
+    \item[fi.jgke.miniplc.builder]
+        Tests for the recursive-descent parser.
+
+    \item[fi.jgke.miniplc.language]
+        Tests for tokens and both unary and binary operations.
+
+    \item[fi.jgke.miniplc.misc]
+        Miscellaneous tests that needlessly increase test coverage.
+
+    \item[fi.jgke.miniplc.samples]
+        A collection of samples, which test the whole interpreter at once.
+
+    \item[fi.jgke.miniplc.tokenizer]
+        Tests for the tokenizer.
+
+    \item[fi.jgke.miniplc.unit]
+        Various unit tests.
+\end{description}
+
 \newpage
 
 \section{LL(1) Syntax}
@@ -150,14 +204,37 @@ The interpreter has a comprehensive automatic test suite.
               "print" | "int" | "string" | "bool" | "assert"
 \end{minted}
 
+\newpage
 \section{Compiler}
-The error messages could use some more work.
+The error messages could use some more work. Currently the interpreter reports
+the line for the syntax error, but pointing at the exact token or line could
+help. Adding or changing tokens to the expected versions could allow printing
+all errors in the file, rather than abandoning parsing at the first error.
+Currently error messages look like the following example: \\
+errorExample.mpl:
+\begin{minted}[mathescape, escapeinside=&&]{python}
+    print 5;
+    print 6;
+    print 5 foo;
+    print 7;
+    print 8;
+\end{minted}
+\begin{minted}[mathescape, escapeinside=&&]{text}
+    $ java -jar build/libs/miniplc.jar errorExample.mpl
+    Unexpected token near line 3: IDENTIFIER (expected SEMICOLON)
+    $
+\end{minted}
 
-The internal representation is given using a DSL, which is parsed to a tree of
-so-called "Consumed rules" - which are rules which have consumed tokens.
+The internal representation is given using a simple DSL, located in
+fi.jgke.miniplc.builder.Syntax. It is explained in more detail in
+chapter~\ref{sec:architecture}.
 
-Error handling is simple - something goes wrong, exceptions are thrown.
+Error handling is very simple - when the interpreter reaches some invalid
+state, such as reading an unexpected token, an exception is thrown. The
+exception then falls through the entire interpreter and is caught at the main
+function.
 
+\newpage
 \section{Original project definition}
 
 This is a copy of the original project definition located at
