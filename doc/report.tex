@@ -207,10 +207,10 @@ are as follows:
 \newpage
 \section{Compiler}
 The error messages could use some more work. Currently the interpreter reports
-the line for the syntax error, but pointing at the exact token or line could
-help. Adding or changing tokens to the expected versions could allow printing
-all errors in the file, rather than abandoning parsing at the first error.
-Currently error messages look like the following example: \\
+the line for the syntax error, but pointing at the exact token or printing the
+line in question could help. Adding or changing tokens to the expected versions
+could allow printing all errors in the file, rather than abandoning parsing at
+the first error. Currently error messages look like the following example: \\[0.5em]
 errorExample.mpl:
 \begin{minted}[mathescape, escapeinside=&&]{python}
     print 5;
@@ -225,9 +225,12 @@ errorExample.mpl:
     $
 \end{minted}
 
-The internal representation is given using a simple DSL, located in
+The internal representation is built using a simple DSL, located in
 fi.jgke.miniplc.builder.Syntax. It is explained in more detail in
-chapter~\ref{sec:architecture}.
+chapter~\ref{sec:architecture}. When the token stream is parsed, the DSL is
+used to convert the token stream to a tree structure, where each node either
+is a single token (such as a constant) or a complex statement (eg. for loop).
+The parsed tree is then executed.
 
 Error handling is very simple - when the interpreter reaches some invalid
 state, such as reading an unexpected token, an exception is thrown. The
@@ -235,6 +238,7 @@ exception then falls through the entire interpreter and is caught at the main
 function.
 
 \newpage
+\appendix
 \section{Original project definition}
 
 This is a copy of the original project definition located at
