@@ -69,12 +69,14 @@ and then resulting token stream is parsed using a simple grammar. The resulting
 tree is then executed.
 
 The tokenizer (fi.jgke.miniplc.tokenizer.Tokenizer) is a simple state machine
-tokenizer - As long as the input stream is not empty, the tokenizer parses a
-single token from the stream. The tokens are then returned to the Executor
-(fi.jgke.miniplc.interpreter.Executor), which gives the resulting stream to the
-tree parser, located in the package fi.jgke.miniplc.builder. The parser is
-trivially modifiable to enable parsing LL(k) grammars, but in the case of this
-language, only LL(1) features are used.
+tokenizer - As long as the input stream is not empty, the tokenizer reads a
+character at a time until it has formed a valid token. In some cases, the
+tokenizer peeks one character, for example when differentiating between
+division '/' and a single-line comment '//'. The tokens are then returned to
+the Executor (fi.jgke.miniplc.interpreter.Executor), which gives the resulting
+stream to the tree parser, located in the package fi.jgke.miniplc.builder. The
+parser is trivially modifiable to enable parsing LL(k) grammars, but in the
+case of this language, only LL(1) features are used.
 
 The syntax of the language is handled using a simple Java-based DSL, located in
 fi.jgke.miniplc.builder.Syntax.
