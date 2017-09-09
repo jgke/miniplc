@@ -3,7 +3,7 @@
 \usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage{placeins}
-\usepackage{geometry}
+\usepackage[top=1in]{geometry}
 \usepackage{minted}
 \usepackage{hyperref}
 
@@ -64,19 +64,62 @@ Running tests:
 \newpage
 \section{Architecture}
 \label{sec:architecture}
-The interpreter has a simple multi-pass design, first the program is tokenized,
+The interpreter has a simple multi-pass design: first the program is tokenized,
 and then resulting token stream is parsed using a simple grammar. The resulting
 tree is then executed.
 
-The tokenizer (fi.jgke.miniplc.tokenizer.Tokenizer) is a simple state machine
+The tokenizer (fi.jgke.miniplc.tokenizer.Tokenizer) is a simple ad-hoc
 tokenizer - As long as the input stream is not empty, the tokenizer reads a
 character at a time until it has formed a valid token. In some cases, the
 tokenizer peeks one character, for example when differentiating between
-division '/' and a single-line comment '//'. The tokens are then returned to
-the Executor (fi.jgke.miniplc.interpreter.Executor), which gives the resulting
-stream to the tree parser, located in the package fi.jgke.miniplc.builder. The
-parser is trivially modifiable to enable parsing LL(k) grammars, but in the
-case of this language, only LL(1) features are used.
+division '/' and a single-line comment '//'.
+As pseudocode, the tokenizer works as follows:
+\begin{minted}{text}
+read one character from input
+
+if character is one of ['!', '&', '(', ')', '*', '+', '-', ';', '<', '=']
+    return character
+
+switch (character) {
+    case '/':
+        read second character from input
+        if second character is '/' read input until newline and parse new token
+        else push character back to stream and return '/'
+
+    case ':':
+        read second character from input
+        if second character is '=' return ':='
+        else push character back to stream and return ':'
+
+    case '.':
+        read second character from input
+        if second character is '.' return '..'
+        else throw UnexpectedCharacterException
+
+    case '"':
+        read characters until '"' and preceding character is not '\'
+        return string
+}
+
+if character is a number:
+    read characters until next character is not a number
+    return number
+
+if character is a letter:
+    read characters until next character is not a letter or a number
+    if string is a keyword:
+        return string as keyword
+    return string as identifier
+
+throw UnexpectedCharacterException
+\end{minted}
+\newpage
+
+After tokenizing, the tokens are returned to the Executor
+(fi.jgke.miniplc.interpreter.Executor), which gives the resulting stream to the
+tree parser, located in the package fi.jgke.miniplc.builder. The parser is
+trivially modifiable to enable parsing LL(k) grammars, but in the case of this
+language, only LL(1) features are used.
 
 The syntax of the language is handled using a simple Java-based DSL, located in
 fi.jgke.miniplc.builder.Syntax.
@@ -167,6 +210,44 @@ are as follows:
 
 \newpage
 
+\section{Tokens patterns as regular expressions}
+
+\begin{minted}{text}
+# Tokens which can be directly matched
+simple-tokens = ! | & | \( | \) | \* | \+ | - | ; | < | =
+
+# one line comment and input until line end
+comment = //.*\n
+
+# division operator
+divide = /
+
+# assignment operator
+assign = :=
+
+# colon token
+colon = :
+
+# range token
+range = \.\.
+
+# string constant
+string = ".*"
+
+# number constant
+number = [0-9]+
+
+# identifier, keyword or a boolean
+identifier-or-keyword = [a-zA-Z][a-zA-Z0-9]*
+
+# white space
+white-space = [ \t\n]
+
+\end{minted}
+
+
+\newpage
+
 \section{LL(1) Syntax}
 
 \begin{minted}[mathescape, escapeinside=&&]{text}
@@ -207,7 +288,129 @@ are as follows:
 \end{minted}
 
 \newpage
-\section{Compiler}
+
+\section{Syntax as represented in the source code}
+\begin{minted}{java}
+/*
+ * <program> ::= <statement> ";" <statements>
+ */
+public static Rule program() {
+    return lazy(() -> rule(StatementsHandlers::executeStatements,
+                           statement(), Semicolon, statements())
+    );
+}
+
+/*
+ * <statements> ::= <statement> ";" <statements>
+ *               |  epsilon
+ */
+public static Rule statements() {
+    return lazy(() -> any(
+            rule(StatementsHandlers::executeStatements,
+                 statement(), Semicolon, statements()),
+            empty()
+    ));
+}
+
+/*
+ * <statement> ::=  "var" <identifier> ":" <type> <maybe_assign>
+ *              |   <identifier> ":=" <expression>
+ *              |   "for" <identifier> "in" <expression> ".." <expression> "do"
+ *                     <statements> "end" "for"
+ *              |   "read" <identifier>
+ *              |   "print" <expression>
+ *              |   "assert" "(" <expression> ")"
+ */
+public static Rule statement() {
+    return lazy(() -> any(
+            rule(StatementHandlers::createVariable,
+                 Var, Identifier, Colon, Type, maybe_assign()),
+            rule(StatementHandlers::updateVariable,
+                 Identifier, Assign, expression()),
+            rule(StatementHandlers::printExpression,
+                 Print, expression()),
+            rule(StatementHandlers::readVariable,
+                 Read, Identifier),
+            rule(StatementHandlers::assertExpression,
+                 Assert, OpenBrace, expression(), CloseBrace),
+            rule(StatementHandlers::forLoop,
+                 For, Identifier, In, expression(), Range, expression(), Do,
+                     statements(),
+                 End, For)
+    ));
+}
+
+
+/*
+ * <maybe_assign> ::= ":=" <expression>
+ *                 |  epsilon
+ */
+private static Rule maybe_assign() {
+    return lazy(() -> any(
+            all(Assign, expression()),
+            empty()
+    ));
+}
+
+/*
+ * <expression> ::= <unaryOperator> <operand>
+ *               | <operand> <maybe_operand>
+ */
+public static Rule expression() {
+    return lazy(() -> any(
+            rule(ExpressionHandlers::handleNot,
+                 Not, operand()),
+            rule(ExpressionHandlers::handleOperation,
+                 operand(), maybe_operand())
+    ));
+}
+
+/*
+ * <maybe_operand> ::= <binaryOperator> <operand>
+ *                  |  epsilon
+ */
+private static Rule maybe_operand() {
+    return lazy(() -> any(
+            all(operator(), operand()),
+            empty()
+    ));
+}
+
+/*
+ * operator ::= "+" | "-" | "*" | "/" | "<" | "=" | "\&"
+ */
+public static Rule operator() {
+    return any(Plus, Minus, Times, Divide, LessThan, Equals, And);
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+ * <operand> ::=  <intConstant> | <stringConstant> | <boolConstant>
+ *            |   <identifier>
+ *            |   "(" expr ")"
+ */
+public static Rule operand() {
+    return lazy(() -> any(
+            rule(OperandHandlers::handleConstant,
+                 any(IntConst, StringConst, BoolConst)),
+            rule(OperandHandlers::handleIdentifier,
+                 Identifier),
+            rule(OperandHandlers::handleExpression,
+                 OpenBrace, expression(), CloseBrace)
+    ));
+}
+\end{minted}
+
+\section{Interpreter details}
 The error messages could use some more work. Currently the interpreter reports
 the line for the syntax error, but pointing at the exact token or printing the
 line in question could help. Adding or changing tokens to the expected versions
